@@ -187,10 +187,9 @@ export function TemporaryLogin() {
 
         {/* Heading */}
         <div>
-          <h2 className="veris-headline text-3xl">Welcome.</h2>
+          <h2 className="veris-headline text-3xl">Console Access.</h2>
           <p className="mt-2 text-sm text-muted-foreground">
-            Sign in with your organization credentials to manage
-            members, events, and attendance.
+            Sign in with your Super Admin credentials to access the system governance panel.
           </p>
         </div>
 
@@ -326,7 +325,7 @@ export function TemporaryLogin() {
           disabled={isLoading}
           aria-busy={isLoading}
         >
-          <span>{isLoading ? "Signing in…" : "Sign in to dashboard"}</span>
+          <span>{isLoading ? "Authenticating…" : "Access System Console"}</span>
           <ArrowRight className="size-4" />
         </button>
       </form>
