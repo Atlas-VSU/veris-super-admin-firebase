@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import SuperAdminDashboardPage from "@/features/super-admin/components/SuperAdminDashboardPage";
+import SuperAdminDashboardPage from "@/features/super-admin/dashboard/components/SuperAdminDashboardPage";
 
 export const metadata: Metadata = {
   title: "Dashboard — Super Admin | VERIS",

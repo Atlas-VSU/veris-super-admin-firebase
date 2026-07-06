@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import SuperAdminOrgAccountsPage from "@/features/super-admin/components/SuperAdminOrgAccountsPage";
+import SuperAdminOrgAccountsPage from "@/features/super-admin/org-accounts/components/SuperAdminOrgAccountsPage";
 
 export const metadata: Metadata = {
   title: "Org Accounts — Super Admin | VERIS",

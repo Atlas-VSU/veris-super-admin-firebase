@@ -17,9 +17,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "./StatusBadge";
+import { StatusBadge } from "@/features/super-admin/shared/components/StatusBadge";
 import { OrgAccountDetailSheet } from "./OrgAccountDetailSheet";
-import { TableSkeleton } from "./TableSkeleton";
+import { TableSkeleton } from "@/features/super-admin/shared/components/TableSkeleton";
 import type {
   SuperAdminOrgAccount,
   SuperAdminOrg,
