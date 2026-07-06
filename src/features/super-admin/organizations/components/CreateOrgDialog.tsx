@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -21,8 +22,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Building2, RefreshCw } from "lucide-react";
-import type { OrgLevel } from "../../types";
-import { facultiesList } from "../utils/mock";
+import type { OrgLevel, SuperAdminFaculty, SuperAdminProgram } from "../../types";
 
 interface CreateOrgDialogProps {
   open: boolean;
@@ -37,13 +37,21 @@ interface CreateOrgDialogProps {
     description: string;
     faculty_name: string | null;
     faculty_acronym: string | null;
+    faculty_id: string | null;
+    program_id: string | null;
+    program_name: string | null;
+    program_acronym: string | null;
   }) => Promise<void> | void;
+  faculties: SuperAdminFaculty[];
+  programs: SuperAdminProgram[];
 }
 
 export function CreateOrgDialog({
   open,
   onOpenChange,
   onCreate,
+  faculties,
+  programs,
 }: CreateOrgDialogProps) {
   const [name, setName] = useState("");
   const [shortName, setShortName] = useState("");
@@ -53,16 +61,51 @@ export function CreateOrgDialog({
   const [contactEmail, setContactEmail] = useState("");
   const [description, setDescription] = useState("");
   const [faculty, setFaculty] = useState("none");
+  const [programId, setProgramId] = useState("none");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
+
+    if (level === "department" && programId === "none") {
+      toast.error("Please select a Program for department-level organization.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const selectedFac = facultiesList.find((f) => f.acronym === faculty);
-      
+      let faculty_id: string | null = null;
+      let faculty_name: string | null = null;
+      let faculty_acronym: string | null = null;
+      let program_id: string | null = null;
+      let program_name: string | null = null;
+      let program_acronym: string | null = null;
+
+      if (level === "department") {
+        const selectedProg = programs.find((p) => p.id === programId);
+        if (selectedProg) {
+          program_id = selectedProg.id;
+          program_name = selectedProg.name;
+          program_acronym = selectedProg.acronym;
+
+          const selectedFac = faculties.find((f) => f.id === selectedProg.faculty_id);
+          if (selectedFac) {
+            faculty_id = selectedFac.id;
+            faculty_name = selectedFac.name;
+            faculty_acronym = selectedFac.acronym;
+          }
+        }
+      } else if (level === "faculty") {
+        const selectedFac = faculties.find((f) => f.acronym === faculty);
+        if (selectedFac) {
+          faculty_id = selectedFac.id;
+          faculty_name = selectedFac.name;
+          faculty_acronym = selectedFac.acronym;
+        }
+      }
+
       await onCreate({
         name,
         short_name: shortName,
@@ -71,8 +114,12 @@ export function CreateOrgDialog({
         president,
         contact_email: contactEmail,
         description,
-        faculty_name: selectedFac ? selectedFac.name : null,
-        faculty_acronym: selectedFac ? selectedFac.acronym : null,
+        faculty_name,
+        faculty_acronym,
+        faculty_id,
+        program_id,
+        program_name,
+        program_acronym,
       });
 
       // Reset Form
@@ -84,6 +131,7 @@ export function CreateOrgDialog({
       setContactEmail("");
       setDescription("");
       setFaculty("none");
+      setProgramId("none");
 
       onOpenChange(false);
     } finally {
@@ -151,7 +199,28 @@ export function CreateOrgDialog({
               </div>
             </div>
 
-            {level !== "council" && (
+            {level === "department" && (
+              <div className="grid gap-2">
+                <Label htmlFor="org-program" className="text-xs font-semibold text-slate-600 uppercase">
+                  Academic Program / Course
+                </Label>
+                <Select value={programId} onValueChange={setProgramId}>
+                  <SelectTrigger id="org-program" className="border-blue-100">
+                    <SelectValue placeholder="Select Program" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    <SelectItem value="none">Select Program...</SelectItem>
+                    {programs.map((prog) => (
+                      <SelectItem key={prog.id} value={prog.id}>
+                        {prog.name} ({prog.acronym})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {level === "faculty" && (
               <div className="grid gap-2">
                 <Label htmlFor="org-faculty" className="text-xs font-semibold text-slate-600 uppercase">
                   Faculty Association
@@ -160,9 +229,9 @@ export function CreateOrgDialog({
                   <SelectTrigger id="org-faculty" className="border-blue-100">
                     <SelectValue placeholder="Select Faculty" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-slate-200">
                     <SelectItem value="none">None / Independent</SelectItem>
-                    {facultiesList.map((fac) => (
+                    {faculties.map((fac) => (
                       <SelectItem key={fac.acronym} value={fac.acronym}>
                         {fac.name} ({fac.acronym})
                       </SelectItem>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { toast } from "sonner";
 import {
   Dialog,
   DialogContent,
@@ -21,13 +22,12 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Edit2, RefreshCw } from "lucide-react";
-import type { SuperAdminOrg, OrgLevel } from "../../types";
-import { EnhancedOrg, facultiesList } from "../utils/mock";
+import type { SuperAdminOrg, OrgLevel, SuperAdminFaculty, SuperAdminProgram } from "../../types";
 
 interface EditOrgDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  org: EnhancedOrg | null;
+  org: SuperAdminOrg | null;
   onSave: (
     orgId: string,
     orgData: {
@@ -40,8 +40,14 @@ interface EditOrgDialogProps {
       description: string;
       faculty_name: string | null;
       faculty_acronym: string | null;
+      faculty_id: string | null;
+      program_id: string | null;
+      program_name: string | null;
+      program_acronym: string | null;
     }
   ) => Promise<void> | void;
+  faculties: SuperAdminFaculty[];
+  programs: SuperAdminProgram[];
 }
 
 export function EditOrgDialog({
@@ -49,6 +55,8 @@ export function EditOrgDialog({
   onOpenChange,
   org,
   onSave,
+  faculties,
+  programs,
 }: EditOrgDialogProps) {
   const [name, setName] = useState("");
   const [shortName, setShortName] = useState("");
@@ -58,6 +66,7 @@ export function EditOrgDialog({
   const [contactEmail, setContactEmail] = useState("");
   const [description, setDescription] = useState("");
   const [faculty, setFaculty] = useState("none");
+  const [programId, setProgramId] = useState("none");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   // Load details when org changes
@@ -71,16 +80,51 @@ export function EditOrgDialog({
       setContactEmail(org.contact_email || "");
       setDescription(org.description || "");
       setFaculty(org.faculty_acronym || "none");
+      setProgramId(org.program_id || "none");
     }
   }, [org, open]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!org || !name.trim()) return;
+
+    if (level === "department" && programId === "none") {
+      toast.error("Please select a Program for department-level organization.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      const selectedFac = facultiesList.find((f) => f.acronym === faculty);
+      let faculty_id: string | null = null;
+      let faculty_name: string | null = null;
+      let faculty_acronym: string | null = null;
+      let program_id: string | null = null;
+      let program_name: string | null = null;
+      let program_acronym: string | null = null;
+
+      if (level === "department") {
+        const selectedProg = programs.find((p) => p.id === programId);
+        if (selectedProg) {
+          program_id = selectedProg.id;
+          program_name = selectedProg.name;
+          program_acronym = selectedProg.acronym;
+
+          const selectedFac = faculties.find((f) => f.id === selectedProg.faculty_id);
+          if (selectedFac) {
+            faculty_id = selectedFac.id;
+            faculty_name = selectedFac.name;
+            faculty_acronym = selectedFac.acronym;
+          }
+        }
+      } else if (level === "faculty") {
+        const selectedFac = faculties.find((f) => f.acronym === faculty);
+        if (selectedFac) {
+          faculty_id = selectedFac.id;
+          faculty_name = selectedFac.name;
+          faculty_acronym = selectedFac.acronym;
+        }
+      }
 
       await onSave(org.id, {
         name,
@@ -90,8 +134,12 @@ export function EditOrgDialog({
         president,
         contact_email: contactEmail,
         description,
-        faculty_name: selectedFac ? selectedFac.name : null,
-        faculty_acronym: selectedFac ? selectedFac.acronym : null,
+        faculty_name,
+        faculty_acronym,
+        faculty_id,
+        program_id,
+        program_name,
+        program_acronym,
       });
 
       onOpenChange(false);
@@ -160,7 +208,28 @@ export function EditOrgDialog({
               </div>
             </div>
 
-            {level !== "council" && (
+            {level === "department" && (
+              <div className="grid gap-2">
+                <Label htmlFor="edit-program" className="text-xs font-semibold text-slate-600 uppercase">
+                  Academic Program / Course
+                </Label>
+                <Select value={programId} onValueChange={setProgramId}>
+                  <SelectTrigger id="edit-program" className="border-blue-100">
+                    <SelectValue placeholder="Select Program" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-white border-slate-200">
+                    <SelectItem value="none">Select Program...</SelectItem>
+                    {programs.map((prog) => (
+                      <SelectItem key={prog.id} value={prog.id}>
+                        {prog.name} ({prog.acronym})
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+
+            {level === "faculty" && (
               <div className="grid gap-2">
                 <Label htmlFor="edit-faculty" className="text-xs font-semibold text-slate-600 uppercase">
                   Faculty Association
@@ -169,9 +238,9 @@ export function EditOrgDialog({
                   <SelectTrigger id="edit-faculty" className="border-blue-100">
                     <SelectValue placeholder="Select Faculty" />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white border-slate-200">
                     <SelectItem value="none">None / Independent</SelectItem>
-                    {facultiesList.map((fac) => (
+                    {faculties.map((fac) => (
                       <SelectItem key={fac.acronym} value={fac.acronym}>
                         {fac.name} ({fac.acronym})
                       </SelectItem>

@@ -30,15 +30,14 @@ import {
   Info,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { EnhancedOrg } from "../utils/mock";
 
 interface OrgDetailSheetProps {
-  org: EnhancedOrg | null;
+  org: SuperAdminOrg | null;
   linkedAccounts: SuperAdminOrgAccount[];
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onEdit?: (org: EnhancedOrg) => void;
-  onToggleArchive?: (org: EnhancedOrg) => void;
+  onEdit?: (org: SuperAdminOrg) => void;
+  onToggleArchive?: (org: SuperAdminOrg) => void;
 }
 
 function DetailRow({

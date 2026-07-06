@@ -1,11 +1,12 @@
 "use client";
 
-import { SuperAdminSidebar } from "@/features/super-admin/components/SuperAdminSidebar";
+import { SuperAdminSidebar } from "@/features/super-admin/shared/components/SuperAdminSidebar";
 import { MobileBottomNav } from "@/components/nav-bar/MobileBottomNav";
 import {
   LayoutDashboard,
   Building2,
   Users,
+  Calendar,
   LogOut,
 } from "lucide-react";
 import { useEffect, useState } from "react";
@@ -19,6 +20,7 @@ const mobileIconMap = {
   "layout-dashboard": LayoutDashboard,
   "building-2": Building2,
   "users": Users,
+  "calendar": Calendar,
   "logout": LogOut,
 };
 
@@ -34,6 +36,11 @@ const superAdminData = {
       label: "Organizations",
       icon: "building-2",
       href: "/super-admin/organizations",
+    },
+    {
+      label: "Terms",
+      icon: "calendar",
+      href: "/super-admin/terms",
     },
     {
       label: "Accounts",
