@@ -6,6 +6,7 @@ import {
   LayoutDashboard,
   Building2,
   Users,
+  Calendar,
   LogOut,
   PanelLeftClose,
   PanelLeftOpen,
@@ -38,6 +39,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { label: "Dashboard", href: "/super-admin/dashboard", icon: LayoutDashboard },
   { label: "Organizations", href: "/super-admin/organizations", icon: Building2 },
+  { label: "Terms Management", href: "/super-admin/terms", icon: Calendar },
   { label: "Org Accounts", href: "/super-admin/org-accounts", icon: Users },
 ];
 

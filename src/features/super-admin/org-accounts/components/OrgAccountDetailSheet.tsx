@@ -8,8 +8,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { StatusBadge } from "./StatusBadge";
-import { TierBadge } from "./TierBadge";
+import { StatusBadge } from "@/features/super-admin/shared/components/StatusBadge";
+import { TierBadge } from "@/features/super-admin/shared/components/TierBadge";
 import type {
   SuperAdminOrgAccount,
   SuperAdminOrg,

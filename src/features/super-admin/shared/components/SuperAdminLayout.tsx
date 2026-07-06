@@ -1,6 +1,6 @@
 "use client";
 
-import { SuperAdminSidebar } from "@/features/super-admin/components/SuperAdminSidebar";
+import { SuperAdminSidebar } from "@/features/super-admin/shared/components/SuperAdminSidebar";
 import { MobileBottomNav } from "@/components/nav-bar/MobileBottomNav";
 import { LayoutDashboard, Building2, Users } from "lucide-react";
 

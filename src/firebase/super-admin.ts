@@ -16,20 +16,9 @@ import type {
   SubscriptionTier,
   OrgLevel,
 } from "@/features/super-admin/types";
-import type { Timestamp } from "firebase-admin/firestore";
+import { toISOString } from "@/utils/dateUtils";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function toISOString(value: unknown): string | null {
-  if (!value) return null;
-  // Firebase Admin Timestamp has a toDate() method
-  if (typeof (value as Timestamp).toDate === "function") {
-    return (value as Timestamp).toDate().toISOString();
-  }
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value === "string") return value;
-  return null;
-}
 
 // ─── Faculties ────────────────────────────────────────────────────────────────
 

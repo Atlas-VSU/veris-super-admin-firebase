@@ -1,14 +1,10 @@
 import { NextResponse, NextRequest } from "next/server";
 import { cookies } from "next/headers";
 import { adminAuth, adminDb } from "@/firebase/firebase-admin.config";
-import fs from "fs";
-import path from "path";
 
 export async function POST(request: NextRequest) {
-  let requestToken: string | undefined;
   try {
     const { idToken } = await request.json();
-    requestToken = idToken;
 
     if (!idToken) {
       return NextResponse.json(
@@ -23,13 +19,6 @@ export async function POST(request: NextRequest) {
     const userData = userDoc.data();
 
     if (!userData) {
-      try {
-        const logPath = path.join(process.cwd(), "error.log");
-        const logMessage = `[${new Date().toISOString()}] User is not registered in Firestore: UID=${uid}\n`;
-        fs.appendFileSync(logPath, logMessage, "utf8");
-      } catch (e) {
-        console.error("Failed to write to error.log:", e);
-      }
       return NextResponse.json(
         { error: "User is not registered" },
         { status: 404 }
@@ -62,15 +51,8 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({ status: "success" });
-  } catch (error: any) {
+  } catch (error) {
     console.error("Error creating session cookie:", error);
-    try {
-      const logPath = path.join(process.cwd(), "error.log");
-      const logMessage = `[${new Date().toISOString()}] Error creating session: ${error.message}\nStack: ${error.stack}\nID Token: ${requestToken ? requestToken.substring(0, 20) + "..." : "none"}\n\n`;
-      fs.appendFileSync(logPath, logMessage, "utf8");
-    } catch (e) {
-      console.error("Failed to write to error.log:", e);
-    }
     return NextResponse.json(
       { error: "Failed to create session" },
       { status: 401 }

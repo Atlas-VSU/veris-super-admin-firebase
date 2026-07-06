@@ -1,5 +1,5 @@
 import { fetchSuperAdminData } from "@/firebase/super-admin";
-import { OrgsTable } from "@/features/super-admin/components/OrgsTable";
+import { OrgsTable } from "@/features/super-admin/organizations/components/OrgsTable";
 import { Building2 } from "lucide-react";
 
 export default async function SuperAdminOrganizationsPage() {
