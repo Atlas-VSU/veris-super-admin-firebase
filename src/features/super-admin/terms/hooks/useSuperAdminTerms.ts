@@ -154,7 +154,9 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
       if (sub.subscription_status === "expiring_soon") expiringCount++;
       if (sub.subscription_status === "expired") expiredCount++;
       if (sub.subscription_status === "pending_renewal") pendingCount++;
-      totalRevenue += sub.amountPaid;
+      if (sub.subscription_status === "active" || sub.subscription_status === "expiring_soon" || sub.subscription_status === "pending_renewal") {
+        totalRevenue += sub.amountPaid;
+      }
     });
 
     return {
