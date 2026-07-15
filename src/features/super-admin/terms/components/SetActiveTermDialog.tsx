@@ -21,33 +21,37 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Calendar, RefreshCw } from "lucide-react";
+import { Term } from "@/constants/types";
 
-interface CreateTermDialogProps {
+interface SetActiveTermDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onSubmit: (AY: string, semester: string, setActive: boolean) => Promise<void> | void;
+  onSubmit: (AY: string, semester: string) => Promise<void> | void;
+  terms: Term[]
 }
 
-export function CreateTermDialog({
+export function SetActiveTermDialog({
   open,
   onOpenChange,
   onSubmit,
-}: CreateTermDialogProps) {
-  const [newAY, setNewAY] = useState("2026-2027");
-  const [newSemester, setNewSemester] = useState("1st Semester");
-  const [setNewAsActive, setSetNewAsActive] = useState(true);
-  const [isCreatingTerm, setIsCreatingTerm] = useState(false);
+  terms,
+}: SetActiveTermDialogProps) {
+  const [newAY, setNewAY] = useState(terms[0]?.AY);
+  const [newSemester, setNewSemester] = useState(terms[0]?.semester);
+  const [isSettingANewActiveTerm, setIsSettingANewActiveTerm] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsCreatingTerm(true);
+    setIsSettingANewActiveTerm(true);
     try {
-      await onSubmit(newAY, newSemester, setNewAsActive);
+      await onSubmit(newAY, newSemester);
       onOpenChange(false);
     } finally {
-      setIsCreatingTerm(false);
+      setIsSettingANewActiveTerm(false);
     }
   };
+
+  const uniqueAYs = [...new Set(terms.map((term: Term) => term.AY))];
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -55,10 +59,10 @@ export function CreateTermDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-600" /> Create Academic Term
+              <Calendar className="h-5 w-5 text-blue-600" /> Set New Active Term
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Setup a new semester record. This will initialize subscription statuses for all organizations.
+              Set a new active term. This will deactivate the current active term.
             </DialogDescription>
           </DialogHeader>
 
@@ -72,9 +76,11 @@ export function CreateTermDialog({
                   <SelectValue placeholder="Select Academic Year" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="2025-2026">2025-2026</SelectItem>
-                  <SelectItem value="2026-2027">2026-2027</SelectItem>
-                  <SelectItem value="2027-2028">2027-2028</SelectItem>
+                  {uniqueAYs.map((ay: string) => (
+                    <SelectItem key={ay} value={ay}>
+                      {ay}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </div>
@@ -88,22 +94,10 @@ export function CreateTermDialog({
                   <SelectValue placeholder="Select Semester" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="1st Semester">1st Semester</SelectItem>
-                  <SelectItem value="2nd Semester">2nd Semester</SelectItem>
-                  <SelectItem value="Summer">Summer</SelectItem>
+                  <SelectItem value="1st">1st Semester</SelectItem>
+                  <SelectItem value="2nd">2nd Semester</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="flex items-center gap-2 pt-2">
-              <Checkbox
-                id="set-active"
-                checked={setNewAsActive}
-                onCheckedChange={(checked) => setSetNewAsActive(!!checked)}
-              />
-              <Label htmlFor="set-active" className="text-xs font-medium text-slate-600 cursor-pointer">
-                Set as Active Term (Deactivates current active term)
-              </Label>
             </div>
           </div>
 
@@ -113,21 +107,21 @@ export function CreateTermDialog({
               variant="outline"
               onClick={() => onOpenChange(false)}
               className="border-slate-200 text-slate-600 h-9"
-              disabled={isCreatingTerm}
+              disabled={isSettingANewActiveTerm}
             >
               Cancel
             </Button>
             <Button
               type="submit"
               className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-              disabled={isCreatingTerm}
+              disabled={isSettingANewActiveTerm}
             >
-              {isCreatingTerm ? (
+              {isSettingANewActiveTerm ? (
                 <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Creating...
+                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Setting...
                 </>
               ) : (
-                "Create Term"
+                "Set as New Active Term"
               )}
             </Button>
           </DialogFooter>

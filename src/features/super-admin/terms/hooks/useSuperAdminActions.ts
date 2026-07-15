@@ -6,7 +6,7 @@ import { Term } from "@/features/super-admin/types";
 
 export default function useSuperAdminActions() {
 
-  const onSetNewActiveTerm = async (AY: string, semester: string, setActive: boolean) => {
+  const onSetNewActiveTerm = async (AY: string, semester: string) => {
     try {
       
     } catch (error) {
