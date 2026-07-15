@@ -110,23 +110,9 @@ export function TermFilterCard({
             <SelectItem value="expiring_soon">Expiring Soon</SelectItem>
             <SelectItem value="expired">Expired Only</SelectItem>
             <SelectItem value="not_subscribed">Not Subscribed</SelectItem>
-            <SelectItem value="needs_renewal">Needs Renewal Action</SelectItem>
           </SelectContent>
         </Select>
 
-        {/* Quick Toggle: Needs Renewal */}
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setStatusFilter(statusFilter === "needs_renewal" ? "all" : "needs_renewal")}
-          className={`h-9 text-xs border ${statusFilter === "needs_renewal"
-            ? "bg-amber-100 text-amber-800 border-amber-300 hover:bg-amber-100"
-            : "border-blue-100 hover:bg-slate-50 text-slate-600"
-            }`}
-        >
-          <AlertTriangle className="h-3.5 w-3.5 mr-1" />
-          Needs Renewal
-        </Button>
 
         {/* Result Count */}
         <span className="text-xs text-slate-400 ml-auto whitespace-nowrap">

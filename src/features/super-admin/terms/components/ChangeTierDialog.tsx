@@ -36,6 +36,7 @@ interface ChangeTierDialogProps {
     referenceId: string,
     paymentMethod: string
   ) => Promise<void> | void;
+  isNew: boolean
 }
 
 export function ChangeTierDialog({
@@ -44,6 +45,7 @@ export function ChangeTierDialog({
   org,
   currentSub,
   onChangeTier,
+  isNew
 }: ChangeTierDialogProps) {
   const [newTier, setNewTier] = useState<SubscriptionTier | "none">("basic");
   const [expiresAt, setExpiresAt] = useState("");
@@ -103,10 +105,10 @@ export function ChangeTierDialog({
         <form onSubmit={handleSubmit}>
           <DialogHeader>
             <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Edit2 className="h-5 w-5 text-blue-600" /> Change Subscription Tier
+              <Edit2 className="h-5 w-5 text-blue-600" /> {isNew ? "Activate" : "Change"} Subscription Tier
             </DialogTitle>
             <DialogDescription className="text-xs text-slate-500">
-              Update the subscription pricing category and record the associated payment details.
+              {isNew ? "Activate a new subscription" : "Update the subscription"} pricing category and record the associated payment details.
             </DialogDescription>
           </DialogHeader>
 
@@ -244,7 +246,7 @@ export function ChangeTierDialog({
                   <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Updating...
                 </>
               ) : (
-                "Update Tier"
+                isNew ? "Activate Subscription" : "Update Tier"
               )}
             </Button>
           </DialogFooter>
