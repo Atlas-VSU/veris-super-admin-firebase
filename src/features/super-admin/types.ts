@@ -67,6 +67,11 @@ export interface Term {
   AY: string;
   semester: string;
   isActive: boolean;
+  isDeleted?: boolean;
+  metadata?: {
+    createdAt: Date | string;
+    updatedAt: Date | string;
+  };
 }
 
 export interface OrgSubscription {

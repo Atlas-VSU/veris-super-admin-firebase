@@ -17,6 +17,7 @@ import { SubscriptionHistorySheet } from "./SubscriptionHistorySheet";
 import { useSuperAdminTerms } from "../hooks/useSuperAdminTerms";
 import useSuperAdminActions from "../hooks/useSuperAdminActions";
 import { Term } from "@/constants/types";
+import { CreateNewTermDialog } from "./CreateNewTermDialog";
 
 export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] }) {
   const {
@@ -60,6 +61,11 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
   const handleCreateTerm = async (newAY: string, newSemester: string) => {
     await onSetNewActiveTerm(newAY, newSemester);
     setSetActiveTermOpen(false);
+  }
+
+  const handleAddNewTerm = async (term: Term, setActive: boolean) => {
+    await onAddTerm(term, setActive);
+    setAddTermOpen(false);
   }
 
   return (
@@ -129,12 +135,19 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
 
       {/* --- MODAL DIALOGS --- */}
 
-      {/* CREATE TERM DIALOG */}
+      {/* SET ACTIVE TERM DIALOG */}
       <SetActiveTermDialog
         open={setActiveTermOpen}
         onOpenChange={setSetActiveTermOpen}
         onSubmit={handleCreateTerm}
         terms={terms}
+      />
+
+      <CreateNewTermDialog
+        open={addTermOpen}
+        onOpenChange={setAddTermOpen}
+        onSubmit={handleAddNewTerm}
+        existingTerms={terms}
       />
 
       {/* RENEW SUBSCRIPTION DIALOG */}

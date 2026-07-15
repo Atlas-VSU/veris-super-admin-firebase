@@ -14,7 +14,7 @@ export default function useSuperAdminActions() {
     }
   }
 
-  const onAddTerm = async (term: Term) => {
+  const onAddTerm = async (term: Term, setActive?: boolean) => {
     try {
 
     } catch (error) {
