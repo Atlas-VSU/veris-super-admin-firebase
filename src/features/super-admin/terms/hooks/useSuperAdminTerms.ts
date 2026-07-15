@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import type { SuperAdminOrg, SubscriptionTier, Term, OrgSubscription } from "@/features/super-admin/types";
 import { getAllTerms } from "@/firebase/term";
-import { getSubscriptionsForTerm, getSubscriptionHistoryForOrg } from "@/firebase/subscriptions";
+import { getSubscriptionsForTerm, getSubscriptionHistoryForOrg, updateTier, saveSubscription } from "@/firebase/subscriptions";
 
 export interface MappedOrg extends SuperAdminOrg {
   termSub: OrgSubscription;
@@ -204,6 +204,8 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
       paymentMethod: method,
     };
 
+    await saveSubscription(selectedTermId, orgId, newSub);
+    
     setSubscriptions((prev) => {
       const index = prev.findIndex((s) => s.organization_id === orgId && s.term_id === selectedTermId);
       if (index > -1) {
@@ -218,10 +220,19 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     toast.success(`Subscription for ${selectedOrg.name} renewed successfully!`);
   };
 
-  const handleChangeTier = async (orgId: string, newTier: SubscriptionTier | "none") => {
+  const handleChangeTier = async (
+    orgId: string,
+    newTier: SubscriptionTier | "none",
+    expiresAt: string,
+    amountPaid: number,
+    referenceId: string,
+    paymentMethod: string
+  ) => {
     if (!selectedOrg) return;
 
     const tierVal = newTier === "none" ? null : newTier;
+
+    await updateTier(orgId, newTier, selectedTermId, expiresAt, amountPaid, referenceId, paymentMethod);
 
     setSubscriptions((prev) => {
       const existing = prev.find((s) => s.organization_id === orgId && s.term_id === selectedTermId);
@@ -229,11 +240,11 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
         organization_id: orgId,
         term_id: selectedTermId,
         subscription_tier: tierVal,
-        subscription_status: tierVal === null ? "not_subscribed" : (existing?.subscription_status || "pending_renewal"),
-        expires_at: existing?.expires_at || null,
-        amountPaid: existing?.amountPaid || 0,
-        paymentReference: existing?.paymentReference || null,
-        paymentMethod: existing?.paymentMethod || null,
+        subscription_status: tierVal === null ? "not_subscribed" : "active",
+        expires_at: newTier !== "none" ? expiresAt : (existing?.expires_at || null),
+        amountPaid: newTier !== "none" ? amountPaid : 0,
+        paymentReference: newTier !== "none" ? referenceId : null,
+        paymentMethod: newTier !== "none" ? paymentMethod : null,
       };
 
       const index = prev.findIndex((s) => s.organization_id === orgId && s.term_id === selectedTermId);

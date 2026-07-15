@@ -2,12 +2,14 @@ import { db } from "@/firebase/firebase.config";
 import {
   collection,
   doc,
-  setDoc,
   getDocs,
   query,
   where,
+  updateDoc,
+  Timestamp,
+  addDoc,
 } from "firebase/firestore";
-import type { OrgSubscription } from "@/features/super-admin/types";
+import type { OrgSubscription, SubscriptionTier } from "@/features/super-admin/types";
 import { toISOString } from "@/utils/dateUtils";
 
 const subsCollection = collection(db, "subscriptions");
@@ -42,18 +44,83 @@ export async function getSubscriptionsForTerm(termId: string): Promise<OrgSubscr
   }
 }
 
+export async function updateTier(
+  orgId: string,
+  newTier: SubscriptionTier | "none",
+  termId: string,
+  expiresAt?: string,
+  amountPaid?: number,
+  referenceId?: string,
+  paymentMethod?: string
+) {
+  try {
+    if (newTier === "none") {
+      // Soft-delete: mark existing active subscription inactive instead of hard delete
+      const q = query(
+        subsCollection,
+        where("orgId", "==", orgId),
+        where("termId", "==", termId),
+        where("status", "==", "active")
+      );
+      const snapshot = await getDocs(q);
+      if (!snapshot.empty) {
+        const subDocRef = doc(subsCollection, snapshot.docs[0].id);
+        await updateDoc(subDocRef, {
+          status: "inactive",
+          updatedAt: Timestamp.now(),
+        });
+      }
+      return "success";
+    }
+
+    // Deactivate the currently active subscription for this org+term
+    const q = query(
+      subsCollection,
+      where("orgId", "==", orgId),
+      where("termId", "==", termId),
+      where("status", "==", "active")
+    );
+    const snapshot = await getDocs(q);
+    if (!snapshot.empty) {
+      const subDocRef = doc(subsCollection, snapshot.docs[0].id);
+      await updateDoc(subDocRef, {
+        status: "inactive",
+        updatedAt: Timestamp.now(),
+      });
+    }
+
+    // Create the new active subscription with payment details
+    await addDoc(subsCollection, {
+      orgId,
+      termId,
+      tier: newTier,
+      status: "active",
+      startsAt: Timestamp.now(),
+      validUntil: expiresAt ?? null,
+      amountPaid: amountPaid ?? 0,
+      paymentReference: referenceId ?? null,
+      paymentMethod: paymentMethod ?? null,
+      notes: "Tier updated by super admin.",
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
+
+    return "success";
+  } catch (error) {
+    console.error(`Error updating tier for organization ${orgId}:`, error);
+    throw new Error("Failed to update tier.");
+  }
+}
+
 export async function saveSubscription(
   termId: string,
   orgId: string,
   subData: Omit<OrgSubscription, "term_id" | "organization_id" | "updated_at">
 ) {
   try {
-    const subDocId = `${termId}_${orgId}`;
-    const subDocRef = doc(db, "subscriptions", subDocId);
-
     const payload = {
-      orgId: orgId,
-      termId: termId,
+      orgId,
+      termId,
       tier: subData.subscription_tier,
       status: subData.subscription_status,
       startsAt: subData.starts_at ?? null,
@@ -68,7 +135,31 @@ export async function saveSubscription(
       paymentMethod: subData.paymentMethod ?? null,
     };
 
-    await setDoc(subDocRef, payload);
+    // Find the active subscription doc for this org+term; mark it inactive first
+    const q = query(
+      subsCollection,
+      where("orgId", "==", orgId),
+      where("termId", "==", termId),
+      where("status", "==", "active")
+    );
+    const snapshot = await getDocs(q);
+
+    if (!snapshot.empty) {
+      // Retire the existing active sub, then create a new one
+      await updateDoc(doc(subsCollection, snapshot.docs[0].id), {
+        status: "inactive",
+        updatedAt: Timestamp.now(),
+      });
+    }
+
+    // Always create a fresh active subscription record
+    await addDoc(subsCollection, {
+      ...payload,
+      status: "active",
+      startsAt: Timestamp.now(),
+      createdAt: Timestamp.now(),
+      updatedAt: Timestamp.now(),
+    });
   } catch (error) {
     console.error(`Error saving subscription for term ${termId} and org ${orgId}:`, error);
     throw new Error("Failed to save subscription.");
@@ -85,6 +176,8 @@ export async function getSubscriptionHistoryForOrg(orgId: string): Promise<OrgSu
         id: doc.id,
         organization_id: d.orgId ?? d.organizationId ?? "",
         term_id: d.termId ?? "",
+        status: d.status,
+        isActive: d.status === "active",
         subscription_tier: d.tier ?? d.subscriptionTier ?? null,
         subscription_status: d.status ?? d.subscriptionStatus ?? "not_subscribed",
         starts_at: toISOString(d.startsAt),
