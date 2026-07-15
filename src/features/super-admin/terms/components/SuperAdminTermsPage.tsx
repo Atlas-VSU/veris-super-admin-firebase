@@ -15,6 +15,8 @@ import { SubscriptionHistorySheet } from "./SubscriptionHistorySheet";
 
 // Hook
 import { useSuperAdminTerms } from "../hooks/useSuperAdminTerms";
+import useSuperAdminActions from "../hooks/useSuperAdminActions";
+import { Term } from "@/constants/types";
 
 export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] }) {
   const {
@@ -31,8 +33,10 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
     filteredOrgs,
     termStats,
     selectedOrg,
-    createTermOpen,
-    setCreateTermOpen,
+    setActiveTermOpen,
+    setSetActiveTermOpen,
+    addTermOpen,
+    setAddTermOpen,
     renewOpen,
     setRenewOpen,
     changeTierOpen,
@@ -48,6 +52,16 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
     handleChangeTier,
   } = useSuperAdminTerms(orgs);
 
+  const {
+    onAddTerm,
+    onSetNewActiveTerm,
+  } = useSuperAdminActions();
+
+  const handleCreateTerm = async (newAY: string, newSemester: string, setActive: boolean) => {
+    await onSetNewActiveTerm(newAY, newSemester, setActive);
+    setSetActiveTermOpen(false);
+  }
+
   return (
     <div className="space-y-6 animate-page-enter">
       {/* HEADER SECTION */}
@@ -61,12 +75,20 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
             Manage organization subscription tiers and renewal processes independently for each academic term.
           </p>
         </div>
-        <Button
-          onClick={() => setCreateTermOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" /> Create New Term
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => setSetActiveTermOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-2"
+          >
+            <Calendar className="h-4 w-4" /> Set New Active Term
+          </Button>
+          <Button
+            onClick={() => setAddTermOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Add a New Term
+          </Button>
+        </div>
       </div>
 
       {/* OVERVIEW STATS ROW */}
@@ -109,11 +131,9 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
 
       {/* CREATE TERM DIALOG */}
       <CreateTermDialog
-        open={createTermOpen}
-        onOpenChange={setCreateTermOpen}
-        onSubmit={() => {
-          alert("implement this feature");
-        }}
+        open={setActiveTermOpen}
+        onOpenChange={setSetActiveTermOpen}
+        onSubmit={handleCreateTerm}
       />
 
       {/* RENEW SUBSCRIPTION DIALOG */}

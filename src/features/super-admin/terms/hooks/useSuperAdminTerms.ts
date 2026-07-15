@@ -19,7 +19,8 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
   const [tierFilter, setTierFilter] = useState<SubscriptionTier | "all" | "none">("all");
   const [statusFilter, setStatusFilter] = useState<OrgSubscription["subscription_status"] | "all" | "needs_renewal">("all");
 
-  const [createTermOpen, setCreateTermOpen] = useState(false);
+  const [addTermOpen, setAddTermOpen] = useState(false);
+  const [setActiveTermOpen, setSetActiveTermOpen] = useState(false);
   const [renewOpen, setRenewOpen] = useState(false);
   const [changeTierOpen, setChangeTierOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -312,8 +313,10 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     filteredOrgs,
     termStats,
     selectedOrg,
-    createTermOpen,
-    setCreateTermOpen,
+    setActiveTermOpen,
+    setSetActiveTermOpen,
+    addTermOpen,
+    setAddTermOpen,
     renewOpen,
     setRenewOpen,
     changeTierOpen,
