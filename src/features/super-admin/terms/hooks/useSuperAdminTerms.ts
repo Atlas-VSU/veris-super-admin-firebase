@@ -92,7 +92,7 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
   const mappedOrganizations = useMemo(() => {
     return orgs.map((org) => {
-      const sub = subscriptions.find((s) => s.organization_id === org.id && s.term_id === selectedTermId) || {
+      const sub = subscriptions.find((s) => s.organization_id === org.id && s.term_id === selectedTermId && s.subscription_status == "active") || {
         organization_id: org.id,
         term_id: selectedTermId,
         subscription_tier: null,
