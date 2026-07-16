@@ -11,6 +11,7 @@ import {
 } from "firebase/firestore";
 import type { OrgSubscription, SubscriptionTier } from "@/features/super-admin/types";
 import { toISOString } from "@/utils/dateUtils";
+import { metadata } from "@/app/super-admin/dashboard/page";
 
 const subsCollection = collection(db, "subscriptions");
 
@@ -70,6 +71,12 @@ export async function updateTier(
           updatedAt: Timestamp.now(),
         });
       }
+
+      await updateDoc(doc(collection(db, "organizations"), orgId), {
+        subscriptionId: null,
+        subscribed: false,
+        "metadata.updatedAt": Timestamp.now(),
+      })
       return "success";
     }
 
@@ -90,7 +97,7 @@ export async function updateTier(
     }
 
     // Create the new active subscription with payment details
-    await addDoc(subsCollection, {
+    const subId = await addDoc(subsCollection, {
       orgId,
       termId,
       tier: newTier,
@@ -104,6 +111,12 @@ export async function updateTier(
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
+
+    await updateDoc(doc(collection(db, "organizations"), orgId), {
+      subscriptionId: subId.id,
+      subscribed: true,
+      "metadata.updatedAt": Timestamp.now(),
+    })
 
     return "success";
   } catch (error) {
@@ -153,13 +166,20 @@ export async function saveSubscription(
     }
 
     // Always create a fresh active subscription record
-    await addDoc(subsCollection, {
+    const subId = await addDoc(subsCollection, {
       ...payload,
       status: "active",
       startsAt: Timestamp.now(),
       createdAt: Timestamp.now(),
       updatedAt: Timestamp.now(),
     });
+
+    // Update the org with the subscription ID
+    await updateDoc(doc(collection(db, "organizations"), orgId), {
+      subscriptionId: subId.id,
+      subscribed: true,
+      "metadata.updatedAt": Timestamp.now(),
+    })
   } catch (error) {
     console.error(`Error saving subscription for term ${termId} and org ${orgId}:`, error);
     throw new Error("Failed to save subscription.");
