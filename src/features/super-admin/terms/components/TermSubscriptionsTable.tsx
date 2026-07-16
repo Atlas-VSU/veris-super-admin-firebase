@@ -15,7 +15,6 @@ import {
   CheckCircle2,
   AlertTriangle,
   XCircle,
-  Clock,
   HelpCircle,
   Edit2,
   History,
@@ -111,11 +110,6 @@ export function OrgSubscriptionsTable({
                   class: "bg-red-50 text-red-700 border-red-200 hover:bg-red-50",
                   icon: XCircle,
                 },
-                pending_renewal: {
-                  label: "Pending Renewal",
-                  class: "bg-indigo-50 text-indigo-700 border-indigo-200 hover:bg-indigo-50",
-                  icon: Clock,
-                },
                 not_subscribed: {
                   label: "Not Subscribed",
                   class: "bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-100",
@@ -207,7 +201,7 @@ export function OrgSubscriptionsTable({
                   <TableCell className="py-3 pr-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {/* Renew Action button */}
-                      {["expired", "expiring_soon", "pending_renewal"].includes(sub.subscription_status) && selectedTerm?.isActive ? (
+                      {["expired", "expiring_soon"].includes(sub.subscription_status) && selectedTerm?.isActive ? (
                         <Button
                           size="sm"
                           onClick={() => onOpenRenew(org, sub)}

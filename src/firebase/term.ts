@@ -101,3 +101,98 @@ export const checkForDuplicateTerms = async (AY: string, sem: string) => {
     }
 }
 
+/**
+ * Adds a brand-new term document to Firestore.
+ * If `activate` is true the new term is marked isActive = true and any
+ * currently-active term is deactivated.
+ */
+export const addTerm = async (
+    AY: string,
+    semester: string,
+    activate: boolean = false
+): Promise<{ id: string } | null> => {
+    try {
+        const newDocRef = await addDoc(termsCollection, {
+            AY,
+            semester,
+            isActive: activate,
+            isDeleted: false,
+            metadata: {
+                createdAt: Timestamp.now(),
+                updatedAt: Timestamp.now(),
+            },
+        });
+
+        if (activate) {
+            // Deactivate the previously active term (if any)
+            const currentActive = await getActiveTerm();
+            if (currentActive) {
+                await updateDoc(doc(termsCollection, currentActive.id!), {
+                    isActive: false,
+                    "metadata.updatedAt": Timestamp.now(),
+                });
+            }
+        }
+
+        // Invalidate caches so the next load gets fresh data
+        cacheService.invalidate(CACHE_KEYS.activeTerm());
+        cacheService.invalidate(CACHE_KEYS.allTerms());
+
+        return { id: newDocRef.id };
+    } catch (error) {
+        handleFirestoreError(error, `adding term`);
+        return null;
+    }
+};
+
+/**
+ * Sets an EXISTING term as the active term.
+ * Returns 'not_found' when the AY+semester combo does not exist in Firestore,
+ * 'already_active' when it is already the active term, or 'ok' on success.
+ */
+export const setActiveTerm = async (
+    AY: string,
+    semester: string
+): Promise<"ok" | "not_found" | "already_active"> => {
+    // Find the target term by AY + semester
+    const q = query(
+        termsCollection,
+        where("AY", "==", AY),
+        where("semester", "==", semester),
+        where("isDeleted", "==", false)
+    );
+    const snap = await getDocs(q);
+
+    if (snap.empty) {
+        return "not_found";
+    }
+
+    const targetDoc = snap.docs[0];
+    const targetData = targetDoc.data();
+
+    if (targetData.isActive === true) {
+        return "already_active";
+    }
+
+    // Deactivate the current active term
+    const currentActive = await getActiveTerm();
+    if (currentActive && currentActive.id !== targetDoc.id) {
+        await updateDoc(doc(termsCollection, currentActive.id!), {
+            isActive: false,
+            "metadata.updatedAt": Timestamp.now(),
+        });
+    }
+
+    // Activate the target term
+    await updateDoc(doc(termsCollection, targetDoc.id), {
+        isActive: true,
+        "metadata.updatedAt": Timestamp.now(),
+    });
+
+    // Invalidate caches
+    cacheService.invalidate(CACHE_KEYS.activeTerm());
+    cacheService.invalidate(CACHE_KEYS.allTerms());
+
+    return "ok";
+};
+

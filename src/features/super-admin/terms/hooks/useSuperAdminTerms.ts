@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import type { SuperAdminOrg, SubscriptionTier, Term, OrgSubscription } from "@/features/super-admin/types";
 import { getAllTerms } from "@/firebase/term";
-import { getSubscriptionsForTerm, getSubscriptionHistoryForOrg } from "@/firebase/subscriptions";
+import { getSubscriptionsForTerm, getSubscriptionHistoryForOrg, updateTier, saveSubscription, deriveSubscriptionStatus } from "@/firebase/subscriptions";
 
 export interface MappedOrg extends SuperAdminOrg {
   termSub: OrgSubscription;
@@ -19,7 +19,8 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
   const [tierFilter, setTierFilter] = useState<SubscriptionTier | "all" | "none">("all");
   const [statusFilter, setStatusFilter] = useState<OrgSubscription["subscription_status"] | "all" | "needs_renewal">("all");
 
-  const [createTermOpen, setCreateTermOpen] = useState(false);
+  const [addTermOpen, setAddTermOpen] = useState(false);
+  const [setActiveTermOpen, setSetActiveTermOpen] = useState(false);
   const [renewOpen, setRenewOpen] = useState(false);
   const [changeTierOpen, setChangeTierOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
@@ -91,16 +92,23 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
   const mappedOrganizations = useMemo(() => {
     return orgs.map((org) => {
-      const sub = subscriptions.find((s) => s.organization_id === org.id && s.term_id === selectedTermId) || {
-        organization_id: org.id,
-        term_id: selectedTermId,
-        subscription_tier: null,
-        subscription_status: "not_subscribed" as const,
-        expires_at: null,
-        amountPaid: 0,
-        paymentReference: null,
-        paymentMethod: null,
-      };
+      const raw = subscriptions.find((s) => s.organization_id === org.id && s.term_id === selectedTermId && s.subscription_status !== "inactive");
+      const sub: OrgSubscription = raw
+        ? {
+            ...raw,
+            // Re-derive status from expires_at so local state is never stale
+            subscription_status: deriveSubscriptionStatus(raw.subscription_tier, raw.expires_at),
+          }
+        : {
+            organization_id: org.id,
+            term_id: selectedTermId,
+            subscription_tier: null,
+            subscription_status: "not_subscribed" as const,
+            expires_at: null,
+            amountPaid: 0,
+            paymentReference: null,
+            paymentMethod: null,
+          };
       return {
         ...org,
         termSub: sub,
@@ -129,7 +137,7 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
       if (statusFilter !== "all") {
         if (statusFilter === "needs_renewal") {
-          const needs = ["expiring_soon", "expired", "pending_renewal"].includes(org.termSub.subscription_status);
+          const needs = ["expiring_soon", "expired"].includes(org.termSub.subscription_status);
           if (!needs) return false;
         } else {
           if (org.termSub.subscription_status !== statusFilter) return false;
@@ -145,24 +153,23 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     let activeCount = 0;
     let expiringCount = 0;
     let expiredCount = 0;
-    let pendingCount = 0;
     let totalRevenue = 0;
 
     subscriptions.forEach((sub) => {
       if (sub.subscription_status === "active") activeCount++;
       if (sub.subscription_status === "expiring_soon") expiringCount++;
       if (sub.subscription_status === "expired") expiredCount++;
-      if (sub.subscription_status === "pending_renewal") pendingCount++;
-      totalRevenue += sub.amountPaid;
+      if (sub.subscription_status === "active" || sub.subscription_status === "expiring_soon") {
+        totalRevenue += sub.amountPaid;
+      }
     });
 
     return {
       activeCount,
       expiringCount,
       expiredCount,
-      pendingCount,
-      needsRenewalCount: expiringCount + expiredCount + pendingCount,
-      totalSubscribed: activeCount + expiringCount + expiredCount,
+      needsRenewalCount: expiringCount + expiredCount,
+      totalSubscribed: activeCount + expiringCount,
       totalRevenue,
     };
   }, [subscriptions]);
@@ -203,6 +210,8 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
       paymentMethod: method,
     };
 
+    await saveSubscription(selectedTermId, orgId, newSub);
+    
     setSubscriptions((prev) => {
       const index = prev.findIndex((s) => s.organization_id === orgId && s.term_id === selectedTermId);
       if (index > -1) {
@@ -217,10 +226,19 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     toast.success(`Subscription for ${selectedOrg.name} renewed successfully!`);
   };
 
-  const handleChangeTier = async (orgId: string, newTier: SubscriptionTier | "none") => {
+  const handleChangeTier = async (
+    orgId: string,
+    newTier: SubscriptionTier | "none",
+    expiresAt: string,
+    amountPaid: number,
+    referenceId: string,
+    paymentMethod: string
+  ) => {
     if (!selectedOrg) return;
 
     const tierVal = newTier === "none" ? null : newTier;
+
+    await updateTier(orgId, newTier, selectedTermId, expiresAt, amountPaid, referenceId, paymentMethod);
 
     setSubscriptions((prev) => {
       const existing = prev.find((s) => s.organization_id === orgId && s.term_id === selectedTermId);
@@ -228,11 +246,11 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
         organization_id: orgId,
         term_id: selectedTermId,
         subscription_tier: tierVal,
-        subscription_status: tierVal === null ? "not_subscribed" : (existing?.subscription_status || "pending_renewal"),
-        expires_at: existing?.expires_at || null,
-        amountPaid: existing?.amountPaid || 0,
-        paymentReference: existing?.paymentReference || null,
-        paymentMethod: existing?.paymentMethod || null,
+        subscription_status: tierVal === null ? "not_subscribed" : "active",
+        expires_at: newTier !== "none" ? expiresAt : (existing?.expires_at || null),
+        amountPaid: newTier !== "none" ? amountPaid : 0,
+        paymentReference: newTier !== "none" ? referenceId : null,
+        paymentMethod: newTier !== "none" ? paymentMethod : null,
       };
 
       const index = prev.findIndex((s) => s.organization_id === orgId && s.term_id === selectedTermId);
@@ -312,8 +330,10 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     filteredOrgs,
     termStats,
     selectedOrg,
-    createTermOpen,
-    setCreateTermOpen,
+    setActiveTermOpen,
+    setSetActiveTermOpen,
+    addTermOpen,
+    setAddTermOpen,
     renewOpen,
     setRenewOpen,
     changeTierOpen,

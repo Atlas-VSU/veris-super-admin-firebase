@@ -8,7 +8,6 @@ interface TermStatsCardsProps {
   totalSubscribed: number;
   totalOrgs: number;
   needsRenewalCount: number;
-  pendingCount: number;
   expiringCount: number;
   expiredCount: number;
   totalRevenue: number;
@@ -19,7 +18,6 @@ export function TermStatsCards({
   totalSubscribed,
   totalOrgs,
   needsRenewalCount,
-  pendingCount,
   expiringCount,
   expiredCount,
   totalRevenue,
@@ -45,20 +43,20 @@ export function TermStatsCards({
         </CardContent>
       </Card>
 
-      {/* Needs Renewal Card */}
+      {/* Expired Card */}
       <Card className="border border-amber-100 bg-amber-50/20 shadow-sm">
         <CardHeader className="flex flex-row items-center justify-between pb-2 space-y-0">
           <CardTitle className="text-xs font-semibold text-amber-800 uppercase tracking-wider">
-            Needs Renewal
+            Expired Subscriptions
           </CardTitle>
           <AlertTriangle className="h-4 w-4 text-amber-600" />
         </CardHeader>
         <CardContent>
           <div className="text-2xl font-bold text-amber-700">
-            {needsRenewalCount}
+            {expiredCount}
           </div>
           <p className="text-xs text-amber-600 mt-1 font-medium">
-            {pendingCount} pending · {expiringCount} expiring · {expiredCount} expired
+            {expiringCount} expiring soon
           </p>
         </CardContent>
       </Card>

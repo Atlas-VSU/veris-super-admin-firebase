@@ -54,11 +54,12 @@ export function SubscriptionHistorySheet({
               <p className="text-xs text-slate-400">This organization does not have any subscriptions recorded.</p>
             </div>
           ) : (
-            historyList.map(({ term, sub }) => {
+            historyList.map(({ term, sub }, i) => {
               if (!sub) return null;
+              const isActiveSub = sub.subscription_status === "active";
               return (
                 <div
-                  key={term.id}
+                  key={sub.id ?? `${term.id}-${i}`}
                   className="border border-slate-100 rounded-lg p-4 bg-slate-50/50 space-y-3"
                 >
                   <div className="flex justify-between items-start">
@@ -70,13 +71,13 @@ export function SubscriptionHistorySheet({
                         Record updated: {format(new Date(sub.updated_at || sub.created_at || new Date()), "PP")}
                       </p>
                     </div>
-                    {term.isActive ? (
+                    {isActiveSub ? (
                       <Badge className="bg-emerald-100 text-emerald-800 border-emerald-200 text-[9px] font-bold uppercase tracking-wider">
-                        Active Term
+                        Active
                       </Badge>
                     ) : (
                       <Badge className="bg-slate-200 text-slate-600 border-slate-300 text-[9px] font-bold uppercase tracking-wider">
-                        Closed Record
+                        Inactive
                       </Badge>
                     )}
                   </div>

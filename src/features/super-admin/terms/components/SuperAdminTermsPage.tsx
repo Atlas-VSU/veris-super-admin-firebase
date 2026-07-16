@@ -8,13 +8,16 @@ import type { SuperAdminOrg } from "@/features/super-admin/types";
 import { TermStatsCards } from "./TermStatsCards";
 import { TermFilterCard } from "./TermFilterCard";
 import { OrgSubscriptionsTable } from "./TermSubscriptionsTable";
-import { CreateTermDialog } from "./CreateTermDialog";
+import { SetActiveTermDialog } from "./SetActiveTermDialog";
 import { RenewSubscriptionDialog } from "./RenewSubscriptionDialog";
 import { ChangeTierDialog } from "./ChangeTierDialog";
 import { SubscriptionHistorySheet } from "./SubscriptionHistorySheet";
 
 // Hook
 import { useSuperAdminTerms } from "../hooks/useSuperAdminTerms";
+import useSuperAdminActions from "../hooks/useSuperAdminActions";
+import { Term } from "@/constants/types";
+import { CreateNewTermDialog } from "./CreateNewTermDialog";
 
 export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] }) {
   const {
@@ -31,8 +34,10 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
     filteredOrgs,
     termStats,
     selectedOrg,
-    createTermOpen,
-    setCreateTermOpen,
+    setActiveTermOpen,
+    setSetActiveTermOpen,
+    addTermOpen,
+    setAddTermOpen,
     renewOpen,
     setRenewOpen,
     changeTierOpen,
@@ -48,6 +53,21 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
     handleChangeTier,
   } = useSuperAdminTerms(orgs);
 
+  const {
+    onAddTerm,
+    onSetNewActiveTerm,
+  } = useSuperAdminActions();
+
+  const handleCreateTerm = async (newAY: string, newSemester: string) => {
+    await onSetNewActiveTerm(newAY, newSemester);
+    setSetActiveTermOpen(false);
+  }
+
+  const handleAddNewTerm = async (term: Term, setActive: boolean) => {
+    await onAddTerm(term, setActive);
+    setAddTermOpen(false);
+  }
+
   return (
     <div className="space-y-6 animate-page-enter">
       {/* HEADER SECTION */}
@@ -61,12 +81,20 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
             Manage organization subscription tiers and renewal processes independently for each academic term.
           </p>
         </div>
-        <Button
-          onClick={() => setCreateTermOpen(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-2"
-        >
-          <Plus className="h-4 w-4" /> Create New Term
-        </Button>
+        <div className="flex justify-end gap-2">
+          <Button
+            onClick={() => setSetActiveTermOpen(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-2"
+          >
+            <Calendar className="h-4 w-4" /> Set New Active Term
+          </Button>
+          <Button
+            onClick={() => setAddTermOpen(true)}
+            className="bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-2"
+          >
+            <Plus className="h-4 w-4" /> Add a New Term
+          </Button>
+        </div>
       </div>
 
       {/* OVERVIEW STATS ROW */}
@@ -74,7 +102,6 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
         totalSubscribed={termStats.totalSubscribed}
         totalOrgs={orgs.length}
         needsRenewalCount={termStats.needsRenewalCount}
-        pendingCount={termStats.pendingCount}
         expiringCount={termStats.expiringCount}
         expiredCount={termStats.expiredCount}
         totalRevenue={termStats.totalRevenue}
@@ -107,13 +134,19 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
 
       {/* --- MODAL DIALOGS --- */}
 
-      {/* CREATE TERM DIALOG */}
-      <CreateTermDialog
-        open={createTermOpen}
-        onOpenChange={setCreateTermOpen}
-        onSubmit={() => {
-          alert("implement this feature");
-        }}
+      {/* SET ACTIVE TERM DIALOG */}
+      <SetActiveTermDialog
+        open={setActiveTermOpen}
+        onOpenChange={setSetActiveTermOpen}
+        onSubmit={handleCreateTerm}
+        terms={terms}
+      />
+
+      <CreateNewTermDialog
+        open={addTermOpen}
+        onOpenChange={setAddTermOpen}
+        onSubmit={handleAddNewTerm}
+        existingTerms={terms}
       />
 
       {/* RENEW SUBSCRIPTION DIALOG */}
@@ -133,6 +166,7 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
         org={selectedOrg}
         currentSub={activeSubForSelected}
         onChangeTier={handleChangeTier}
+        isNew={activeSubForSelected?.subscription_status == "inactive"}
       />
 
       {/* SUBSCRIPTION HISTORY DRAWERS SHEET */}
