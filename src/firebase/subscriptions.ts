@@ -15,20 +15,54 @@ import { metadata } from "@/app/super-admin/dashboard/page";
 
 const subsCollection = collection(db, "subscriptions");
 
+/**
+ * Derives the display status of a subscription from the expiry date at read-time.
+ * This means the status in Firestore is never stale — every fetch re-evaluates it.
+ *
+ * Windows:
+ *   - No tier              → "not_subscribed"
+ *   - No expiresAt         → "active"  (assumed indefinite)
+ *   - expiresAt < now      → "expired"
+ *   - expiresAt < now+30d  → "expiring_soon"
+ *   - else                 → "active"
+ */
+export function deriveSubscriptionStatus(
+  tier: string | null | undefined,
+  expiresAt: string | null | undefined
+): OrgSubscription["subscription_status"] {
+  if (!tier) return "not_subscribed";
+  if (!expiresAt) return "active";
+
+  const now = new Date();
+  const expiry = new Date(expiresAt);
+  const thirtyDaysFromNow = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+
+  if (expiry < now) return "expired";
+  if (expiry < thirtyDaysFromNow) return "expiring_soon";
+  return "active";
+}
+
 export async function getSubscriptionsForTerm(termId: string): Promise<OrgSubscription[]> {
   try {
     const q = query(subsCollection, where("termId", "==", termId));
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => {
       const d = doc.data();
+      // Only derive status for active docs; inactive stays inactive
+      const storedStatus = d.status ?? d.subscriptionStatus ?? "not_subscribed";
+      const tier = d.tier ?? d.subscriptionTier ?? null;
+      const expiresAt = toISOString(d.validUntil ?? d.expiresAt);
+      const derivedStatus = storedStatus === "inactive"
+        ? "inactive"
+        : deriveSubscriptionStatus(tier, expiresAt);
       return {
         id: doc.id,
         organization_id: d.orgId ?? d.organizationId ?? "",
         term_id: d.termId ?? "",
-        subscription_tier: d.tier ?? d.subscriptionTier ?? null,
-        subscription_status: d.status ?? d.subscriptionStatus ?? "not_subscribed",
+        subscription_tier: tier,
+        subscription_status: derivedStatus,
         starts_at: toISOString(d.startsAt),
-        expires_at: toISOString(d.validUntil ?? d.expiresAt),
+        expires_at: expiresAt,
         renewed_at: toISOString(d.renewedAt),
         renewed_by: d.renewedBy ?? null,
         notes: d.notes ?? null,
@@ -192,16 +226,20 @@ export async function getSubscriptionHistoryForOrg(orgId: string): Promise<OrgSu
     const snapshot = await getDocs(q);
     return snapshot.docs.map((doc) => {
       const d = doc.data();
+      const storedStatus = d.status ?? d.subscriptionStatus ?? "not_subscribed";
+      const tier = d.tier ?? d.subscriptionTier ?? null;
+      const expiresAt = toISOString(d.validUntil ?? d.expiresAt);
+      const derivedStatus = storedStatus === "inactive"
+        ? "inactive"
+        : deriveSubscriptionStatus(tier, expiresAt);
       return {
         id: doc.id,
         organization_id: d.orgId ?? d.organizationId ?? "",
         term_id: d.termId ?? "",
-        status: d.status,
-        isActive: d.status === "active",
-        subscription_tier: d.tier ?? d.subscriptionTier ?? null,
-        subscription_status: d.status ?? d.subscriptionStatus ?? "not_subscribed",
+        subscription_tier: tier,
+        subscription_status: derivedStatus,
         starts_at: toISOString(d.startsAt),
-        expires_at: toISOString(d.validUntil ?? d.expiresAt),
+        expires_at: expiresAt,
         renewed_at: toISOString(d.renewedAt),
         renewed_by: d.renewedBy ?? null,
         notes: d.notes ?? null,

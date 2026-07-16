@@ -8,7 +8,6 @@ interface TermStatsCardsProps {
   totalSubscribed: number;
   totalOrgs: number;
   needsRenewalCount: number;
-  pendingCount: number;
   expiringCount: number;
   expiredCount: number;
   totalRevenue: number;
@@ -19,7 +18,6 @@ export function TermStatsCards({
   totalSubscribed,
   totalOrgs,
   needsRenewalCount,
-  pendingCount,
   expiringCount,
   expiredCount,
   totalRevenue,
@@ -58,7 +56,7 @@ export function TermStatsCards({
             {expiredCount}
           </div>
           <p className="text-xs text-amber-600 mt-1 font-medium">
-            {pendingCount} pending · {expiringCount} expiring 
+            {expiringCount} expiring soon
           </p>
         </CardContent>
       </Card>

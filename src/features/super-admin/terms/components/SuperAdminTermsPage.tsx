@@ -102,7 +102,6 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
         totalSubscribed={termStats.totalSubscribed}
         totalOrgs={orgs.length}
         needsRenewalCount={termStats.needsRenewalCount}
-        pendingCount={termStats.pendingCount}
         expiringCount={termStats.expiringCount}
         expiredCount={termStats.expiredCount}
         totalRevenue={termStats.totalRevenue}

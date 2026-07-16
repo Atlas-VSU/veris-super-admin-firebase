@@ -79,7 +79,7 @@ export interface OrgSubscription {
   organization_id: string;
   term_id: string;
   subscription_tier: SubscriptionTier | null;
-  subscription_status: "active" | "expiring_soon" | "expired" | "pending_renewal" | "not_subscribed" | "inactive" | "grace_period";
+  subscription_status: "active" | "expiring_soon" | "expired" | "not_subscribed" | "inactive" | "grace_period";
   starts_at?: string | null;
   expires_at: string | null;
   renewed_at?: string | null;

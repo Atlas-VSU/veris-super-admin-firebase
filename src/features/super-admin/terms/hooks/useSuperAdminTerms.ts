@@ -2,7 +2,7 @@ import { useState, useMemo, useEffect } from "react";
 import { toast } from "sonner";
 import type { SuperAdminOrg, SubscriptionTier, Term, OrgSubscription } from "@/features/super-admin/types";
 import { getAllTerms } from "@/firebase/term";
-import { getSubscriptionsForTerm, getSubscriptionHistoryForOrg, updateTier, saveSubscription } from "@/firebase/subscriptions";
+import { getSubscriptionsForTerm, getSubscriptionHistoryForOrg, updateTier, saveSubscription, deriveSubscriptionStatus } from "@/firebase/subscriptions";
 
 export interface MappedOrg extends SuperAdminOrg {
   termSub: OrgSubscription;
@@ -92,16 +92,23 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
   const mappedOrganizations = useMemo(() => {
     return orgs.map((org) => {
-      const sub = subscriptions.find((s) => s.organization_id === org.id && s.term_id === selectedTermId && s.subscription_status == "active") || {
-        organization_id: org.id,
-        term_id: selectedTermId,
-        subscription_tier: null,
-        subscription_status: "not_subscribed" as const,
-        expires_at: null,
-        amountPaid: 0,
-        paymentReference: null,
-        paymentMethod: null,
-      };
+      const raw = subscriptions.find((s) => s.organization_id === org.id && s.term_id === selectedTermId && s.subscription_status !== "inactive");
+      const sub: OrgSubscription = raw
+        ? {
+            ...raw,
+            // Re-derive status from expires_at so local state is never stale
+            subscription_status: deriveSubscriptionStatus(raw.subscription_tier, raw.expires_at),
+          }
+        : {
+            organization_id: org.id,
+            term_id: selectedTermId,
+            subscription_tier: null,
+            subscription_status: "not_subscribed" as const,
+            expires_at: null,
+            amountPaid: 0,
+            paymentReference: null,
+            paymentMethod: null,
+          };
       return {
         ...org,
         termSub: sub,
@@ -130,7 +137,7 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
       if (statusFilter !== "all") {
         if (statusFilter === "needs_renewal") {
-          const needs = ["expiring_soon", "expired", "pending_renewal"].includes(org.termSub.subscription_status);
+          const needs = ["expiring_soon", "expired"].includes(org.termSub.subscription_status);
           if (!needs) return false;
         } else {
           if (org.termSub.subscription_status !== statusFilter) return false;
@@ -146,15 +153,13 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     let activeCount = 0;
     let expiringCount = 0;
     let expiredCount = 0;
-    let pendingCount = 0;
     let totalRevenue = 0;
 
     subscriptions.forEach((sub) => {
       if (sub.subscription_status === "active") activeCount++;
       if (sub.subscription_status === "expiring_soon") expiringCount++;
       if (sub.subscription_status === "expired") expiredCount++;
-      if (sub.subscription_status === "pending_renewal") pendingCount++;
-      if (sub.subscription_status === "active" || sub.subscription_status === "expiring_soon" || sub.subscription_status === "pending_renewal") {
+      if (sub.subscription_status === "active" || sub.subscription_status === "expiring_soon") {
         totalRevenue += sub.amountPaid;
       }
     });
@@ -163,9 +168,8 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
       activeCount,
       expiringCount,
       expiredCount,
-      pendingCount,
-      needsRenewalCount: expiringCount + expiredCount + pendingCount,
-      totalSubscribed: activeCount + expiringCount + expiredCount,
+      needsRenewalCount: expiringCount + expiredCount,
+      totalSubscribed: activeCount + expiringCount,
       totalRevenue,
     };
   }, [subscriptions]);
