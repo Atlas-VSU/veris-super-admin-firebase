@@ -1,11 +1,17 @@
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, useRef } from "react";
 import type { SuperAdminOrg, SuperAdminOrgAccount, OrgLevel, SubscriptionTier, SuperAdminFaculty, SuperAdminProgram } from "@/features/super-admin/types";
-import { createOrganization, updateOrganization } from "@/firebase/organizations";
+import { createOrganization, fetchOrganizationsPaginated, updateOrganization } from "@/firebase/organizations";
 import { getFaculties } from "@/firebase/faculties";
 import { getPrograms } from "@/firebase/programs";
 import { toast } from "sonner";
+import { Organization } from "@/constants/types";
 
-export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccount[]) {
+interface useOrgsTableProps {
+  itemsPerPage: number;
+ }
+
+export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
+  const [accounts, setAccounts] = useState<SuperAdminOrgAccount[]>([]);
   const [localOrgs, setLocalOrgs] = useState<SuperAdminOrg[]>([]);
   const [faculties, setFaculties] = useState<SuperAdminFaculty[]>([]);
   const [programs, setPrograms] = useState<SuperAdminProgram[]>([]);
@@ -15,7 +21,8 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
   const [tierFilter, setTierFilter] = useState<SubscriptionTier | "all">("all");
   const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "date-newest" | "date-oldest">("name-asc");
   const [currentPage, setCurrentPage] = useState(1);
-  const itemsPerPage = 6;
+  const cursorRef = useRef<Record<number, any>>({});
+  const [isLoading, setIsLoading] = useState(false);
 
   const [selectedOrg, setSelectedOrg] = useState<SuperAdminOrg | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -23,10 +30,8 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
   const [editOpen, setEditOpen] = useState(false);
   const [archiveConfirmOpen, setArchiveConfirmOpen] = useState(false);
   const [archiveTargetOrg, setArchiveTargetOrg] = useState<SuperAdminOrg | null>(null);
+  const [totalOrgsCount, setTotalOrgsCount] = useState(0);
 
-  useEffect(() => {
-    setLocalOrgs(orgs);
-  }, [orgs]);
 
   useEffect(() => {
     async function loadData() {
@@ -46,23 +51,67 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
 
   // Reset page to 1 when filters change
   useEffect(() => {
-    setCurrentPage(1);
-  }, [search, levelFilter, statusFilter, tierFilter, sortBy]);
+    const fetchData = async () => {
+      try {
+        setIsLoading(true);
+        const cursor = currentPage > 1 ? (cursorRef.current[currentPage - 2] ?? null) : null;
+
+        const { results: fetchedDocs,totalCount, lastVisible, accounts } = await fetchOrganizationsPaginated(
+          itemsPerPage,
+          cursor,
+          search,
+          sortBy,
+          levelFilter,
+          statusFilter,
+          tierFilter
+        );
+
+        // setOrgs(fetchedDocs);
+        setAccounts(accounts);
+        const restructuredOrgs = fetchedDocs.map((org) => ({
+          ...org,
+          facultyName: faculties.find((f) => f.id === org.facultyId)?.name || null,
+          facultyAcronym: faculties.find((f) => f.id === org.facultyId)?.acronym || null,
+          programName: programs.find((p) => p.id === org.programId)?.name || null,
+          programAcronym: programs.find((p) => p.id === org.programId)?.acronym || null,
+          level: org.accessLevel === 1 ? "department" : org.accessLevel === 2 ? "faculty" : "council",
+          createdAt: org.metadata?.createdAt?.toDate 
+          ? org.metadata.createdAt.toDate().toLocaleDateString("en-US", {
+            year: "numeric",
+            month: "long",
+            day: "numeric",
+          })
+          : null,
+        } as unknown as SuperAdminOrg));
+
+        setLocalOrgs(restructuredOrgs);
+        setTotalOrgsCount(totalCount);
+        if (lastVisible) {
+          cursorRef.current[currentPage - 1] = lastVisible;
+        }
+        setIsLoading(false);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    }
+    fetchData();
+
+  }, [search, levelFilter, statusFilter, tierFilter, sortBy, currentPage]);
 
   const handleCreateOrg = async (orgData: {
     name: string;
-    short_name: string;
+    shortName: string;
     level: OrgLevel;
     adviser: string;
     president: string;
-    contact_email: string;
+    contactEmail: string;
     description: string;
-    faculty_name: string | null;
-    faculty_acronym: string | null;
-    faculty_id: string | null;
-    program_id: string | null;
-    program_name: string | null;
-    program_acronym: string | null;
+    facultyName: string | null;
+    facultyAcronym: string | null;
+    facultyId: string | null;
+    programId: string | null;
+    programName: string | null;
+    programAcronym: string | null;
   }) => {
     try {
       const newId = await createOrganization(orgData);
@@ -70,22 +119,22 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
       const newOrg: SuperAdminOrg = {
         id: newId,
         name: orgData.name,
-        short_name: orgData.short_name,
+        shortName: orgData.shortName,
         level: orgData.level,
-        faculty_id: orgData.faculty_id,
-        faculty_name: orgData.faculty_name,
-        faculty_acronym: orgData.faculty_acronym,
-        program_id: orgData.program_id,
-        program_name: orgData.program_name,
-        program_acronym: orgData.program_acronym,
-        is_archived: false,
+        facultyId: orgData.facultyId,
+        facultyName: orgData.facultyName,
+        facultyAcronym: orgData.facultyAcronym,
+        programId: orgData.programId,
+        programName: orgData.programName,
+        programAcronym: orgData.programAcronym,
+        isArchived: false,
         subscribed: false,
-        subscription_tier: null,
+        subscriptionTier: null,
         adviser: orgData.adviser,
         president: orgData.president,
-        contact_email: orgData.contact_email,
+        contactEmail: orgData.contactEmail,
         description: orgData.description,
-        created_at: new Date().toISOString().split("T")[0],
+        createdAt: new Date().toISOString().split("T")[0],
       };
 
       setLocalOrgs((prev) => [newOrg, ...prev]);
@@ -99,22 +148,32 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
     orgId: string,
     orgData: {
       name: string;
-      short_name: string;
+      shortName: string;
       level: OrgLevel;
       adviser: string;
       president: string;
-      contact_email: string;
+      contactEmail: string;
       description: string;
-      faculty_name: string | null;
-      faculty_acronym: string | null;
-      faculty_id: string | null;
-      program_id: string | null;
-      program_name: string | null;
-      program_acronym: string | null;
+      facultyName: string | null;
+      facultyAcronym: string | null;
+      facultyId: string | null;
+      programId: string | null;
+      programName: string | null;
+      programAcronym: string | null;
     }
   ) => {
     try {
-      await updateOrganization(orgId, orgData);
+      await updateOrganization(orgId, {
+        name: orgData.name,
+        shortName: orgData.shortName,
+        level: orgData.level === "department" ? 1 : orgData.level === "faculty" ? 2 : 3,
+        adviser: orgData.adviser,
+        president: orgData.president,
+        contactEmail: orgData.contactEmail,
+        description: orgData.description,
+        facultyId: orgData.facultyId || null,
+        programId: orgData.programId || null
+      });
 
       setLocalOrgs((prev) =>
         prev.map((org) => {
@@ -146,9 +205,9 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
     if (!archiveTargetOrg) return;
 
     try {
-      const nextArchiveState = !archiveTargetOrg.is_archived;
+      const nextArchiveState = !archiveTargetOrg.isArchived;
       await updateOrganization(archiveTargetOrg.id, {
-        is_archived: nextArchiveState,
+        isArchived: nextArchiveState,
       });
 
       setLocalOrgs((prev) =>
@@ -156,7 +215,7 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
           if (org.id === archiveTargetOrg.id) {
             const updated = {
               ...org,
-              is_archived: nextArchiveState,
+              isArchived: nextArchiveState,
             };
             if (selectedOrg && selectedOrg.id === org.id) {
               setSelectedOrg(updated);
@@ -175,51 +234,52 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
     }
   };
 
-  const filteredAndSortedOrgs = useMemo(() => {
-    let result = localOrgs.filter((org) => {
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        const matchesName = org.name.toLowerCase().includes(q) || org.short_name.toLowerCase().includes(q);
-        const matchesAcronym = org.faculty_acronym?.toLowerCase().includes(q) || org.program_acronym?.toLowerCase().includes(q);
-        const matchesAdviser = org.adviser?.toLowerCase().includes(q);
-        if (!matchesName && !matchesAcronym && !matchesAdviser) return false;
-      }
+  // const filteredAndSortedOrgs = useMemo(() => {
+  //   let result = localOrgs.filter((org) => {
+  //     if (search.trim()) {
+  //       const q = search.toLowerCase();
+  //       const matchesName = org.name.toLowerCase().includes(q) || org.shortName.toLowerCase().includes(q);
+  //       const matchesAcronym = org.facultyAcronym?.toLowerCase().includes(q) || org.programAcronym?.toLowerCase().includes(q);
+  //       const matchesAdviser = org.adviser?.toLowerCase().includes(q);
+  //       if (!matchesName && !matchesAcronym && !matchesAdviser) return false;
+  //     }
 
-      if (levelFilter !== "all" && org.level !== levelFilter) return false;
+  //     if (levelFilter !== "all" && org.level !== levelFilter) return false;
 
-      if (statusFilter !== "all") {
-        if (statusFilter === "archived" && !org.is_archived) return false;
-        if (statusFilter === "active" && (org.is_archived || !org.subscribed)) return false;
-        if (statusFilter === "inactive" && (org.is_archived || org.subscribed)) return false;
-      }
+  //     if (statusFilter !== "all") {
+  //       if (statusFilter === "archived" && !org.isArchived) return false;
+  //       if (statusFilter === "active" && (org.isArchived || !org.subscribed)) return false;
+  //       if (statusFilter === "inactive" && (org.isArchived || org.subscribed)) return false;
+  //     }
 
-      if (tierFilter !== "all" && org.subscription_tier !== tierFilter) return false;
+  //     if (tierFilter !== "all" && org.subscriptionTier !== tierFilter) return false;
 
-      return true;
-    });
+  //     return true;
+  //   });
 
-    result.sort((a, b) => {
-      if (sortBy === "name-asc") return a.name.localeCompare(b.name);
-      if (sortBy === "name-desc") return b.name.localeCompare(a.name);
-      if (sortBy === "date-newest") {
-        return new Date(b.created_at || 0).getTime() - new Date(a.created_at || 0).getTime();
-      }
-      if (sortBy === "date-oldest") {
-        return new Date(a.created_at || 0).getTime() - new Date(b.created_at || 0).getTime();
-      }
-      return 0;
-    });
+  //   result.sort((a, b) => {
+  //     if (sortBy === "name-asc") return a.name.localeCompare(b.name);
+  //     if (sortBy === "name-desc") return b.name.localeCompare(a.name);
+  //     if (sortBy === "date-newest") {
+  //       return new Date(b.createdAt || 0).getTime() - new Date(a.createdAt || 0).getTime();
+  //     }
+  //     if (sortBy === "date-oldest") {
+  //       return new Date(a.createdAt || 0).getTime() - new Date(b.createdAt || 0).getTime();
+  //     }
+  //     return 0;
+  //   });
 
-    return result;
-  }, [localOrgs, search, levelFilter, statusFilter, tierFilter, sortBy]);
+  //   return result;
+  // }, [localOrgs, search, levelFilter, statusFilter, tierFilter, sortBy]);
 
-  const totalPages = Math.ceil(filteredAndSortedOrgs.length / itemsPerPage);
-  const paginatedOrgs = useMemo(() => {
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    return filteredAndSortedOrgs.slice(startIndex, startIndex + itemsPerPage);
-  }, [filteredAndSortedOrgs, currentPage]);
+  const totalPages = Math.ceil(totalOrgsCount / itemsPerPage);
+  // const paginatedOrgs = useMemo(() => {
+  //   const startIndex = (currentPage - 1) * itemsPerPage;
+  //   return filteredAndSortedOrgs.slice(startIndex, startIndex + itemsPerPage);
+  // }, [filteredAndSortedOrgs, currentPage]);
 
   return {
+    accounts,
     localOrgs,
     search,
     setSearch,
@@ -244,9 +304,7 @@ export function useOrgsTable(orgs: SuperAdminOrg[], accounts: SuperAdminOrgAccou
     archiveConfirmOpen,
     setArchiveConfirmOpen,
     archiveTargetOrg,
-    filteredAndSortedOrgs,
     totalPages,
-    paginatedOrgs,
     handleCreateOrg,
     handleEditOrg,
     handleToggleArchiveConfirm,

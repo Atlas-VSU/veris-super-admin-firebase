@@ -56,7 +56,7 @@ export function SubscriptionHistorySheet({
           ) : (
             historyList.map(({ term, sub }, i) => {
               if (!sub) return null;
-              const isActiveSub = sub.subscription_status === "active";
+              const isActiveSub = sub.subscriptionStatus === "active";
               return (
                 <div
                   key={sub.id ?? `${term.id}-${i}`}
@@ -68,7 +68,7 @@ export function SubscriptionHistorySheet({
                         AY {term.AY} — {term.semester}
                       </p>
                       <p className="text-[10px] text-slate-400 font-medium">
-                        Record updated: {format(new Date(sub.updated_at || sub.created_at || new Date()), "PP")}
+                        Record updated: {format(new Date(sub.updatedAt || sub.createdAt || new Date()), "PP")}
                       </p>
                     </div>
                     {isActiveSub ? (
@@ -85,12 +85,12 @@ export function SubscriptionHistorySheet({
                   <div className="grid grid-cols-2 gap-x-2 gap-y-3 bg-white border border-slate-100 rounded-md p-2.5 text-xs">
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tier</p>
-                      <TierBadge tier={sub.subscription_tier} />
+                      <TierBadge tier={sub.subscriptionTier} />
                     </div>
                     <div>
                       <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Expiration</p>
                       <span className="font-semibold text-slate-700">
-                        {sub.expires_at ? format(parseISO(sub.expires_at), "MMM dd, yyyy") : "—"}
+                        {sub.expiresAt ? format(parseISO(sub.expiresAt), "MMM dd, yyyy") : "—"}
                       </span>
                     </div>
                     <div className="col-span-2 border-t border-slate-50 pt-2 flex items-center justify-between">

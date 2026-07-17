@@ -166,7 +166,7 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
         org={selectedOrg}
         currentSub={activeSubForSelected}
         onChangeTier={handleChangeTier}
-        isNew={activeSubForSelected?.subscription_status == "inactive"}
+        isNew={activeSubForSelected?.subscriptionStatus == "inactive"}
       />
 
       {/* SUBSCRIPTION HISTORY DRAWERS SHEET */}

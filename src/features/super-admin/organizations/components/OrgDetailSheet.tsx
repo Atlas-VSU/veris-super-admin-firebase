@@ -91,7 +91,7 @@ export function OrgDetailSheet({
     router.push("/super-admin/terms");
   };
 
-  const statusVariant = org.is_archived
+  const statusVariant = org.isArchived
     ? "archived"
     : org.subscribed
     ? "active"
@@ -108,32 +108,32 @@ export function OrgDetailSheet({
             <div className="flex items-start gap-3">
               {/* Logo / Avatar representation */}
               <div className="flex items-center justify-center h-12 w-12 rounded-full bg-blue-600 text-white font-bold text-sm shrink-0 shadow-sm">
-                {org.short_name ? org.short_name.substring(0, 3).toUpperCase() : org.name.substring(0, 2).toUpperCase()}
+                {org.shortName ? org.shortName.substring(0, 3).toUpperCase() : org.name.substring(0, 2).toUpperCase()}
               </div>
               <div className="min-w-0 flex-1">
                 <SheetTitle className="text-base font-bold text-slate-800 leading-tight">
                   {org.name}
                 </SheetTitle>
                 <SheetDescription className="text-sm text-slate-500 mt-0.5">
-                  {org.short_name} · {levelLabels[org.level] ?? org.level}
+                  {org.shortName} · {levelLabels[org.level] ?? org.level}
                 </SheetDescription>
               </div>
             </div>
 
             {/* Status badges */}
             <div className="flex flex-wrap gap-2 mt-3">
-              {org.subscription_tier && <TierBadge tier={org.subscription_tier} />}
+              {org.subscriptionTier && <TierBadge tier={org.subscriptionTier} />}
               <Badge
                 variant="outline"
                 className={`text-[10px] font-semibold border ${
-                  org.is_archived
+                  org.isArchived
                     ? "bg-gray-100 text-gray-500 border-gray-200"
                     : org.subscribed
                     ? "bg-emerald-50 text-emerald-700 border-emerald-200"
                     : "bg-amber-50 text-amber-700 border-amber-200"
                 }`}
               >
-                {org.is_archived ? "Archived" : org.subscribed ? "Active Subscribed" : "Inactive"}
+                {org.isArchived ? "Archived" : org.subscribed ? "Active Subscribed" : "Inactive"}
               </Badge>
             </div>
           </SheetHeader>
@@ -156,13 +156,13 @@ export function OrgDetailSheet({
                 size="sm"
                 onClick={() => onToggleArchive(org)}
                 className={`flex-1 h-8 text-xs ${
-                  org.is_archived
+                  org.isArchived
                     ? "border-emerald-200 text-emerald-700 hover:bg-emerald-50"
                     : "border-slate-200 text-slate-500 hover:bg-slate-50"
                 }`}
               >
                 <Archive className="h-3.5 w-3.5 mr-1.5" />
-                {org.is_archived ? "Reactivate" : "Archive"}
+                {org.isArchived ? "Reactivate" : "Archive"}
               </Button>
             )}
           </div>
@@ -183,7 +183,7 @@ export function OrgDetailSheet({
               <DetailRow
                 icon={Tag}
                 label="Acronym"
-                value={org.short_name || "—"}
+                value={org.shortName || "—"}
               />
               <DetailRow
                 icon={GraduationCap}
@@ -201,8 +201,8 @@ export function OrgDetailSheet({
                 icon={BookOpen}
                 label="Faculty / Program"
                 value={
-                  org.faculty_name
-                    ? `${org.faculty_name}${org.faculty_acronym ? ` (${org.faculty_acronym})` : ""}`
+                  org.facultyName
+                    ? `${org.facultyName}${org.facultyAcronym ? ` (${org.facultyAcronym})` : ""}`
                     : "Independent"
                 }
               />
@@ -219,12 +219,12 @@ export function OrgDetailSheet({
               <DetailRow
                 icon={Mail}
                 label="Contact Email"
-                value={org.contact_email || "No Email Address"}
+                value={org.contactEmail || "No Email Address"}
               />
               <DetailRow
                 icon={Calendar}
                 label="Created At"
-                value={org.created_at ? org.created_at : "—"}
+                value={org.createdAt ? org.createdAt : "—"}
               />
               <div className="py-2.5 pl-7">
                 <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider mb-0.5">About / Description</p>
@@ -251,7 +251,7 @@ export function OrgDetailSheet({
               <div className="grid grid-cols-2 gap-2 bg-white border border-slate-100 rounded p-2.5">
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Tier</p>
-                  <TierBadge tier={org.subscription_tier} />
+                  <TierBadge tier={org.subscriptionTier} />
                 </div>
                 <div>
                   <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-0.5">Status</p>
@@ -291,7 +291,7 @@ export function OrgDetailSheet({
                     <DetailRow
                       icon={User}
                       label="Full Name"
-                      value={account.full_name}
+                      value={account.fullName}
                     />
                     <DetailRow
                       icon={Mail}
@@ -303,7 +303,7 @@ export function OrgDetailSheet({
                       label="Account Status"
                       value={
                         <StatusBadge
-                          variant={account.is_active ? "active" : "inactive"}
+                          variant={account.isActive ? "active" : "inactive"}
                         />
                       }
                     />

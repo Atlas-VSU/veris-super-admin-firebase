@@ -17,7 +17,7 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [tierFilter, setTierFilter] = useState<SubscriptionTier | "all" | "none">("all");
-  const [statusFilter, setStatusFilter] = useState<OrgSubscription["subscription_status"] | "all" | "needs_renewal">("all");
+  const [statusFilter, setStatusFilter] = useState<OrgSubscription["subscriptionStatus"] | "all" | "needsRenewal">("all");
 
   const [addTermOpen, setAddTermOpen] = useState(false);
   const [setActiveTermOpen, setSetActiveTermOpen] = useState(false);
@@ -92,19 +92,19 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
   const mappedOrganizations = useMemo(() => {
     return orgs.map((org) => {
-      const raw = subscriptions.find((s) => s.organization_id === org.id && s.term_id === selectedTermId && s.subscription_status !== "inactive");
+      const raw = subscriptions.find((s) => s.organizationId === org.id && s.termId === selectedTermId && s.subscriptionStatus !== "inactive");
       const sub: OrgSubscription = raw
         ? {
             ...raw,
-            // Re-derive status from expires_at so local state is never stale
-            subscription_status: deriveSubscriptionStatus(raw.subscription_tier, raw.expires_at),
+            // Re-derive status from expiresAt so local state is never stale
+            subscriptionStatus: deriveSubscriptionStatus(raw.subscriptionTier, raw.expiresAt),
           }
         : {
-            organization_id: org.id,
-            term_id: selectedTermId,
-            subscription_tier: null,
-            subscription_status: "not_subscribed" as const,
-            expires_at: null,
+            organizationId: org.id,
+            termId: selectedTermId,
+            subscriptionTier: null,
+            subscriptionStatus: "not_subscribed" as const,
+            expiresAt: null,
             amountPaid: 0,
             paymentReference: null,
             paymentMethod: null,
@@ -118,29 +118,29 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
   const filteredOrgs = useMemo(() => {
     return mappedOrganizations.filter((org) => {
-      if (org.is_archived) return false;
+      if (org.isArchived) return false;
 
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
-        const matchesName = org.name.toLowerCase().includes(q) || org.short_name?.toLowerCase().includes(q);
-        const matchesFaculty = org.faculty_name?.toLowerCase().includes(q) || org.faculty_acronym?.toLowerCase().includes(q);
+        const matchesName = org.name.toLowerCase().includes(q) || org.shortName?.toLowerCase().includes(q);
+        const matchesFaculty = org.facultyName?.toLowerCase().includes(q) || org.facultyAcronym?.toLowerCase().includes(q);
         if (!matchesName && !matchesFaculty) return false;
       }
 
       if (tierFilter !== "all") {
         if (tierFilter === "none") {
-          if (org.termSub.subscription_tier !== null) return false;
+          if (org.termSub.subscriptionTier !== null) return false;
         } else {
-          if (org.termSub.subscription_tier !== tierFilter) return false;
+          if (org.termSub.subscriptionTier !== tierFilter) return false;
         }
       }
 
       if (statusFilter !== "all") {
-        if (statusFilter === "needs_renewal") {
-          const needs = ["expiring_soon", "expired"].includes(org.termSub.subscription_status);
+        if (statusFilter === "needsRenewal") {
+          const needs = ["expiring_soon", "expired"].includes(org.termSub.subscriptionStatus);
           if (!needs) return false;
         } else {
-          if (org.termSub.subscription_status !== statusFilter) return false;
+          if (org.termSub.subscriptionStatus !== statusFilter) return false;
         }
       }
 
@@ -156,10 +156,10 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     let totalRevenue = 0;
 
     subscriptions.forEach((sub) => {
-      if (sub.subscription_status === "active") activeCount++;
-      if (sub.subscription_status === "expiring_soon") expiringCount++;
-      if (sub.subscription_status === "expired") expiredCount++;
-      if (sub.subscription_status === "active" || sub.subscription_status === "expiring_soon") {
+      if (sub.subscriptionStatus === "active") activeCount++;
+      if (sub.subscriptionStatus === "expiring_soon") expiringCount++;
+      if (sub.subscriptionStatus === "expired") expiredCount++;
+      if (sub.subscriptionStatus === "active" || sub.subscriptionStatus === "expiring_soon") {
         totalRevenue += sub.amountPaid;
       }
     });
@@ -200,11 +200,11 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     if (!selectedOrg) return;
 
     const newSub: OrgSubscription = {
-      organization_id: orgId,
-      term_id: selectedTermId,
-      subscription_tier: tier,
-      subscription_status: "active",
-      expires_at: validUntil,
+      organizationId: orgId,
+      termId: selectedTermId,
+      subscriptionTier: tier,
+      subscriptionStatus: "active",
+      expiresAt: validUntil,
       amountPaid: amount,
       paymentReference: refNum,
       paymentMethod: method,
@@ -213,7 +213,7 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     await saveSubscription(selectedTermId, orgId, newSub);
     
     setSubscriptions((prev) => {
-      const index = prev.findIndex((s) => s.organization_id === orgId && s.term_id === selectedTermId);
+      const index = prev.findIndex((s) => s.organizationId === orgId && s.termId === selectedTermId);
       if (index > -1) {
         const updated = [...prev];
         updated[index] = newSub;
@@ -241,19 +241,19 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
     await updateTier(orgId, newTier, selectedTermId, expiresAt, amountPaid, referenceId, paymentMethod);
 
     setSubscriptions((prev) => {
-      const existing = prev.find((s) => s.organization_id === orgId && s.term_id === selectedTermId);
+      const existing = prev.find((s) => s.organizationId === orgId && s.termId === selectedTermId);
       const updatedSub: OrgSubscription = {
-        organization_id: orgId,
-        term_id: selectedTermId,
-        subscription_tier: tierVal,
-        subscription_status: tierVal === null ? "not_subscribed" : "active",
-        expires_at: newTier !== "none" ? expiresAt : (existing?.expires_at || null),
+        organizationId: orgId,
+        termId: selectedTermId,
+        subscriptionTier: tierVal,
+        subscriptionStatus: tierVal === null ? "not_subscribed" : "active",
+        expiresAt: newTier !== "none" ? expiresAt : (existing?.expiresAt || null),
         amountPaid: newTier !== "none" ? amountPaid : 0,
         paymentReference: newTier !== "none" ? referenceId : null,
         paymentMethod: newTier !== "none" ? paymentMethod : null,
       };
 
-      const index = prev.findIndex((s) => s.organization_id === orgId && s.term_id === selectedTermId);
+      const index = prev.findIndex((s) => s.organizationId === orgId && s.termId === selectedTermId);
       if (index > -1) {
         const updated = [...prev];
         updated[index] = updatedSub;
@@ -277,7 +277,7 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
         const history = await getSubscriptionHistoryForOrg(orgId);
         if (history && history.length > 0) {
           const matched = history.map((sub: OrgSubscription) => {
-            const term = terms.find((t) => t.id === sub.term_id);
+            const term = terms.find((t) => t.id === sub.termId);
             return {
               term: term || { AY: "Unknown", semester: "Unknown", isActive: false },
               sub,
@@ -286,9 +286,9 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
           setOrgSubscriptionHistory(matched);
         } else {
           // Fallback to local subscriptions matching orgId
-          const fallbackHistory = subscriptions.filter((s) => s.organization_id === orgId);
+          const fallbackHistory = subscriptions.filter((s) => s.organizationId === orgId);
           const matched = fallbackHistory.map((sub: OrgSubscription) => {
-            const term = terms.find((t) => t.id === sub.term_id);
+            const term = terms.find((t) => t.id === sub.termId);
             return {
               term: term || { AY: "Unknown", semester: "Unknown", isActive: false },
               sub,
@@ -297,9 +297,9 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
           setOrgSubscriptionHistory(matched);
         }
       } catch (err) {
-        const fallbackHistory = subscriptions.filter((s) => s.organization_id === orgId);
+        const fallbackHistory = subscriptions.filter((s) => s.organizationId === orgId);
         const matched = fallbackHistory.map((sub: OrgSubscription) => {
-          const term = terms.find((t) => t.id === sub.term_id);
+          const term = terms.find((t) => t.id === sub.termId);
           return {
             term: term || { AY: "Unknown", semester: "Unknown", isActive: false },
             sub,
@@ -313,7 +313,7 @@ export function useSuperAdminTerms(orgs: SuperAdminOrg[]) {
 
   const activeSubForSelected = useMemo(() => {
     if (!selectedOrg) return null;
-    return subscriptions.find((s) => s.organization_id === selectedOrg.id && s.term_id === selectedTermId) || null;
+    return subscriptions.find((s) => s.organizationId === selectedOrg.id && s.termId === selectedTermId) || null;
   }, [selectedOrg, subscriptions, selectedTermId]);
 
   return {

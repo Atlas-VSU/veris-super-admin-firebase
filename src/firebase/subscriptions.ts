@@ -29,7 +29,7 @@ const subsCollection = collection(db, "subscriptions");
 export function deriveSubscriptionStatus(
   tier: string | null | undefined,
   expiresAt: string | null | undefined
-): OrgSubscription["subscription_status"] {
+): OrgSubscription["subscriptionStatus"] {
   if (!tier) return "not_subscribed";
   if (!expiresAt) return "active";
 
@@ -57,17 +57,17 @@ export async function getSubscriptionsForTerm(termId: string): Promise<OrgSubscr
         : deriveSubscriptionStatus(tier, expiresAt);
       return {
         id: doc.id,
-        organization_id: d.orgId ?? d.organizationId ?? "",
-        term_id: d.termId ?? "",
-        subscription_tier: tier,
-        subscription_status: derivedStatus,
-        starts_at: toISOString(d.startsAt),
-        expires_at: expiresAt,
-        renewed_at: toISOString(d.renewedAt),
-        renewed_by: d.renewedBy ?? null,
+        organizationId: d.orgId ?? d.organizationId ?? "",
+        termId: d.termId ?? "",
+        subscriptionTier: tier,
+        subscriptionStatus: derivedStatus,
+        startsAt: toISOString(d.startsAt),
+        expiresAt: expiresAt,
+        renewedAt: toISOString(d.renewedAt),
+        renewedBy: d.renewedBy ?? null,
         notes: d.notes ?? null,
-        created_at: toISOString(d.createdAt ?? d.updatedAt) ?? new Date().toISOString(),
-        updated_at: toISOString(d.updatedAt) ?? new Date().toISOString(),
+        createdAt: toISOString(d.createdAt ?? d.updatedAt) ?? new Date().toISOString(),
+        updatedAt: toISOString(d.updatedAt) ?? new Date().toISOString(),
         amountPaid: d.amountPaid ?? 0,
         paymentReference: d.paymentReference ?? null,
         paymentMethod: d.paymentMethod ?? null,
@@ -148,6 +148,7 @@ export async function updateTier(
 
     await updateDoc(doc(collection(db, "organizations"), orgId), {
       subscriptionId: subId.id,
+      subscriptionTier: newTier,
       subscribed: true,
       "metadata.updatedAt": Timestamp.now(),
     })
@@ -162,20 +163,20 @@ export async function updateTier(
 export async function saveSubscription(
   termId: string,
   orgId: string,
-  subData: Omit<OrgSubscription, "term_id" | "organization_id" | "updated_at">
+  subData: Omit<OrgSubscription, "termId" | "organizationId" | "updatedAt">
 ) {
   try {
     const payload = {
       orgId,
       termId,
-      tier: subData.subscription_tier,
-      status: subData.subscription_status,
-      startsAt: subData.starts_at ?? null,
-      validUntil: subData.expires_at,
-      renewedAt: subData.renewed_at ?? null,
-      renewedBy: subData.renewed_by ?? null,
+      tier: subData.subscriptionTier,
+      status: subData.subscriptionStatus,
+      startsAt: subData.startsAt ?? null,
+      validUntil: subData.expiresAt,
+      renewedAt: subData.renewedAt ?? null,
+      renewedBy: subData.renewedBy ?? null,
       notes: subData.notes ?? null,
-      createdAt: subData.created_at ?? new Date().toISOString(),
+      createdAt: subData.createdAt ?? new Date().toISOString(),
       updatedAt: new Date().toISOString(),
       amountPaid: subData.amountPaid ?? 0,
       paymentReference: subData.paymentReference ?? null,
@@ -211,6 +212,7 @@ export async function saveSubscription(
     // Update the org with the subscription ID
     await updateDoc(doc(collection(db, "organizations"), orgId), {
       subscriptionId: subId.id,
+      subscriptionTier: subData.subscriptionTier,
       subscribed: true,
       "metadata.updatedAt": Timestamp.now(),
     })
@@ -234,17 +236,17 @@ export async function getSubscriptionHistoryForOrg(orgId: string): Promise<OrgSu
         : deriveSubscriptionStatus(tier, expiresAt);
       return {
         id: doc.id,
-        organization_id: d.orgId ?? d.organizationId ?? "",
-        term_id: d.termId ?? "",
-        subscription_tier: tier,
-        subscription_status: derivedStatus,
-        starts_at: toISOString(d.startsAt),
-        expires_at: expiresAt,
-        renewed_at: toISOString(d.renewedAt),
-        renewed_by: d.renewedBy ?? null,
+        organizationId: d.orgId ?? d.organizationId ?? "",
+        termId: d.termId ?? "",
+        subscriptionTier: tier,
+        subscriptionStatus: derivedStatus,
+        startsAt: toISOString(d.startsAt),
+        expiresAt: expiresAt,
+        renewedAt: toISOString(d.renewedAt),
+        renewedBy: d.renewedBy ?? null,
         notes: d.notes ?? null,
-        created_at: toISOString(d.createdAt ?? d.updatedAt) ?? new Date().toISOString(),
-        updated_at: toISOString(d.updatedAt) ?? new Date().toISOString(),
+        createdAt: toISOString(d.createdAt ?? d.updatedAt) ?? new Date().toISOString(),
+        updatedAt: toISOString(d.updatedAt) ?? new Date().toISOString(),
         amountPaid: d.amountPaid ?? 0,
         paymentReference: d.paymentReference ?? null,
         paymentMethod: d.paymentMethod ?? null,
