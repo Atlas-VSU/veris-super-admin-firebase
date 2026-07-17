@@ -36,8 +36,8 @@ export function OrgTableRow({
       <TableCell className="py-3 pl-4">
         <div className="flex items-center gap-2.5">
           <div className="flex items-center justify-center h-8 w-8 rounded-full bg-blue-100 text-blue-700 font-bold text-xs shrink-0 border border-blue-200">
-            {org.short_name
-              ? org.short_name.substring(0, 3).toUpperCase()
+            {org.shortName
+              ? org.shortName.substring(0, 3).toUpperCase()
               : org.name.substring(0, 2).toUpperCase()}
           </div>
           <span className="text-sm font-semibold text-slate-800 truncate max-w-[200px]">
@@ -48,7 +48,7 @@ export function OrgTableRow({
 
       {/* Acronym */}
       <TableCell className="py-3 font-mono text-xs text-slate-500 font-medium">
-        {org.short_name || "—"}
+        {org.shortName || "—"}
       </TableCell>
 
       {/* Level */}
@@ -76,20 +76,20 @@ export function OrgTableRow({
         <Badge
           variant="outline"
           className={`text-[10px] font-semibold border ${
-            org.is_archived
+            org.isArchived
               ? "bg-gray-100 text-gray-500 border-gray-200"
               : org.subscribed
               ? "bg-emerald-50 text-emerald-700 border-emerald-200"
               : "bg-amber-50 text-amber-700 border-amber-200"
           }`}
         >
-          {org.is_archived ? "Archived" : org.subscribed ? "Active" : "Inactive"}
+          {org.isArchived ? "Archived" : org.subscribed ? "Active" : "Inactive"}
         </Badge>
       </TableCell>
 
       {/* Created Date */}
       <TableCell className="py-3 hidden sm:table-cell text-xs text-slate-500 font-mono">
-        {org.created_at || "—"}
+        {org.createdAt || "—"}
       </TableCell>
 
       {/* Actions column */}
@@ -114,7 +114,7 @@ export function OrgTableRow({
               className="flex items-center gap-2 text-amber-600 focus:text-amber-700"
             >
               <Archive className="h-3.5 w-3.5 text-amber-400" />
-              {org.is_archived ? "Reactivate Org" : "Archive Org"}
+              {org.isArchived ? "Reactivate Org" : "Archive Org"}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>

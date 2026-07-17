@@ -94,7 +94,7 @@ export function OrgAccountsTable({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
-            <SelectItem value="not_deleted">Not Deleted</SelectItem>
+            <SelectItem value="notDeleted">Not Deleted</SelectItem>
             <SelectItem value="deleted">Deleted Only</SelectItem>
           </SelectContent>
         </Select>
@@ -160,11 +160,11 @@ export function OrgAccountsTable({
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                         <span className="text-xs font-semibold text-blue-600">
-                          {account.full_name.charAt(0).toUpperCase()}
+                          {account.fullName.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <span className="text-sm font-medium text-slate-800 truncate max-w-[160px]">
-                        {account.full_name}
+                        {account.fullName}
                       </span>
                     </div>
                   </TableCell>
@@ -175,13 +175,13 @@ export function OrgAccountsTable({
                   </TableCell>
                   <TableCell className="py-3 hidden md:table-cell">
                     <span className="text-sm text-slate-600 truncate max-w-[160px] block">
-                      {account.org_name ?? (
+                      {account.orgName ?? (
                         <span className="text-slate-300">—</span>
                       )}
                     </span>
                   </TableCell>
                   <TableCell className="py-3">
-                    {account.is_active ? (
+                    {account.isActive ? (
                       <span className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Active</span>
@@ -194,7 +194,7 @@ export function OrgAccountsTable({
                     )}
                   </TableCell>
                   <TableCell className="py-3 hidden sm:table-cell">
-                    {account.is_deleted ? (
+                    {account.isDeleted ? (
                       <StatusBadge variant="deleted" />
                     ) : (
                       <span className="text-xs text-slate-300">—</span>
@@ -202,8 +202,8 @@ export function OrgAccountsTable({
                   </TableCell>
                   <TableCell className="py-3 hidden lg:table-cell">
                     <span className="text-xs text-slate-400">
-                      {account.created_at
-                        ? format(new Date(account.created_at), "MMM d, yyyy")
+                      {account.createdAt
+                        ? format(new Date(account.createdAt), "MMM d, yyyy")
                         : "—"}
                     </span>
                   </TableCell>

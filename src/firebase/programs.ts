@@ -13,7 +13,7 @@ export async function getPrograms(): Promise<SuperAdminProgram[]> {
         id: doc.id,
         name: d.name ?? "",
         acronym: d.acronym ?? "",
-        faculty_id: d.facultyId ?? "",
+        facultyId: d.facultyId ?? "",
       };
     });
   } catch (error) {

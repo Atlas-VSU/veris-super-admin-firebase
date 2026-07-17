@@ -57,7 +57,7 @@ export function RenewSubscriptionDialog({
   // Initialize values when dialog opens
   useEffect(() => {
     if (org && currentSub) {
-      const initialTier = currentSub.subscription_tier || "basic";
+      const initialTier = currentSub.subscriptionTier || "basic";
       setRenewTier(initialTier);
 
       const standardAmount = initialTier === "premium" ? 15000 : initialTier === "plus" ? 10000 : 5000;

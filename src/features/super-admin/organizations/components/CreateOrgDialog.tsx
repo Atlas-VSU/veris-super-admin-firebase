@@ -29,18 +29,18 @@ interface CreateOrgDialogProps {
   onOpenChange: (open: boolean) => void;
   onCreate: (orgData: {
     name: string;
-    short_name: string;
+    shortName: string;
     level: OrgLevel;
     adviser: string;
     president: string;
-    contact_email: string;
+    contactEmail: string;
     description: string;
-    faculty_name: string | null;
-    faculty_acronym: string | null;
-    faculty_id: string | null;
-    program_id: string | null;
-    program_name: string | null;
-    program_acronym: string | null;
+    facultyName: string | null;
+    facultyAcronym: string | null;
+    facultyId: string | null;
+    programId: string | null;
+    programName: string | null;
+    programAcronym: string | null;
   }) => Promise<void> | void;
   faculties: SuperAdminFaculty[];
   programs: SuperAdminProgram[];
@@ -76,50 +76,50 @@ export function CreateOrgDialog({
     setIsSubmitting(true);
 
     try {
-      let faculty_id: string | null = null;
-      let faculty_name: string | null = null;
-      let faculty_acronym: string | null = null;
-      let program_id: string | null = null;
-      let program_name: string | null = null;
-      let program_acronym: string | null = null;
+      let facultyId: string | null = null;
+      let facultyName: string | null = null;
+      let facultyAcronym: string | null = null;
+      let programId: string | null = null;
+      let programName: string | null = null;
+      let programAcronym: string | null = null;
 
       if (level === "department") {
         const selectedProg = programs.find((p) => p.id === programId);
         if (selectedProg) {
-          program_id = selectedProg.id;
-          program_name = selectedProg.name;
-          program_acronym = selectedProg.acronym;
+          programId = selectedProg.id;
+          programName = selectedProg.name;
+          programAcronym = selectedProg.acronym;
 
-          const selectedFac = faculties.find((f) => f.id === selectedProg.faculty_id);
+          const selectedFac = faculties.find((f) => f.id === selectedProg.facultyId);
           if (selectedFac) {
-            faculty_id = selectedFac.id;
-            faculty_name = selectedFac.name;
-            faculty_acronym = selectedFac.acronym;
+            facultyId = selectedFac.id;
+            facultyName = selectedFac.name;
+            facultyAcronym = selectedFac.acronym;
           }
         }
       } else if (level === "faculty") {
         const selectedFac = faculties.find((f) => f.acronym === faculty);
         if (selectedFac) {
-          faculty_id = selectedFac.id;
-          faculty_name = selectedFac.name;
-          faculty_acronym = selectedFac.acronym;
+          facultyId = selectedFac.id;
+          facultyName = selectedFac.name;
+          facultyAcronym = selectedFac.acronym;
         }
       }
 
       await onCreate({
         name,
-        short_name: shortName,
+        shortName: shortName,
         level,
         adviser,
         president,
-        contact_email: contactEmail,
+        contactEmail: contactEmail,
         description,
-        faculty_name,
-        faculty_acronym,
-        faculty_id,
-        program_id,
-        program_name,
-        program_acronym,
+        facultyName,
+        facultyAcronym,
+        facultyId,
+        programId,
+        programName,
+        programAcronym,
       });
 
       // Reset Form

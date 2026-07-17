@@ -36,8 +36,6 @@ import { OrgFilterHeader } from "./OrgFilterHeader";
 import { OrgTableRow } from "./OrgTableRow";
 
 interface OrgsTableProps {
-  orgs: SuperAdminOrg[];
-  accounts: SuperAdminOrgAccount[];
   isLoading?: boolean;
 }
 
@@ -47,8 +45,9 @@ const levelLabels: Record<OrgLevel, string> = {
   council: "Council",
 };
 
-export function OrgsTable({ orgs, accounts, isLoading = false }: OrgsTableProps) {
+export function OrgsTable({isLoading = false }: OrgsTableProps) {
   const {
+    accounts,
     localOrgs,
     search,
     setSearch,
@@ -73,9 +72,9 @@ export function OrgsTable({ orgs, accounts, isLoading = false }: OrgsTableProps)
     archiveConfirmOpen,
     setArchiveConfirmOpen,
     archiveTargetOrg,
-    filteredAndSortedOrgs,
+    // filteredAndSortedOrgs,
     totalPages,
-    paginatedOrgs,
+    // paginatedOrgs,
     handleCreateOrg,
     handleEditOrg,
     handleToggleArchiveConfirm,
@@ -83,11 +82,11 @@ export function OrgsTable({ orgs, accounts, isLoading = false }: OrgsTableProps)
     itemsPerPage,
     faculties,
     programs,
-  } = useOrgsTable(orgs, accounts);
+  } = useOrgsTable({itemsPerPage:10});
 
   const linkedAccounts = useMemo(() => {
     return selectedOrg
-      ? accounts.filter((a) => a.org_id === selectedOrg.id)
+      ? accounts.filter((a) => a.orgId === selectedOrg.id)
       : [];
   }, [selectedOrg, accounts]);
 
@@ -152,7 +151,7 @@ export function OrgsTable({ orgs, accounts, isLoading = false }: OrgsTableProps)
 
           {isLoading ? (
             <TableSkeleton rows={itemsPerPage} cols={8} />
-          ) : paginatedOrgs.length === 0 ? (
+          ) : localOrgs.length === 0 ? (
             <TableBody>
               <TableRow>
                 <TableCell colSpan={8} className="py-12">
@@ -170,7 +169,7 @@ export function OrgsTable({ orgs, accounts, isLoading = false }: OrgsTableProps)
             </TableBody>
           ) : (
             <TableBody>
-              {paginatedOrgs.map((org) => (
+              {localOrgs.map((org) => (
                 <OrgTableRow
                   key={org.id}
                   org={org}
@@ -229,9 +228,9 @@ export function OrgsTable({ orgs, accounts, isLoading = false }: OrgsTableProps)
               <Archive className="h-5 w-5 text-amber-500" /> Confirm Action
             </AlertDialogTitle>
             <AlertDialogDescription className="text-xs text-slate-500">
-              Are you sure you want to {archiveTargetOrg?.is_archived ? "reactivate" : "archive"} the organization{" "}
+              Are you sure you want to {archiveTargetOrg?.isArchived ? "reactivate" : "archive"} the organization{" "}
               <span className="font-bold text-slate-700">"{archiveTargetOrg?.name}"</span>?
-              {!archiveTargetOrg?.is_archived && " Archiving will hide the organization from typical listings."}
+              {!archiveTargetOrg?.isArchived && " Archiving will hide the organization from typical listings."}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter className="gap-2 sm:gap-0">

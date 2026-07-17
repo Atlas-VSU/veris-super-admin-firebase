@@ -82,15 +82,15 @@ export function DashboardOverview({
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
           title="Total Subscribed Orgs"
-          value={stats?.total_subscribed ?? 0}
-          subtitle={`Out of ${stats?.total_orgs ?? 0} total organizations`}
+          value={stats?.totalSubscribed ?? 0}
+          subtitle={`Out of ${stats?.totalOrgs ?? 0} total organizations`}
           icon={Building2}
           iconClassName="bg-blue-50 text-blue-600"
           isLoading={isLoading}
         />
         <StatCard
           title="Active Org Accounts"
-          value={stats?.total_active_accounts ?? 0}
+          value={stats?.totalActiveAccounts ?? 0}
           subtitle="Active, non-deleted accounts"
           icon={Users}
           iconClassName="bg-emerald-50 text-emerald-600"
@@ -98,7 +98,7 @@ export function DashboardOverview({
         />
         <StatCard
           title="Archived Organizations"
-          value={stats?.total_archived ?? 0}
+          value={stats?.totalArchived ?? 0}
           subtitle="Organizations marked as archived"
           icon={Archive}
           iconClassName="bg-slate-100 text-slate-500"
@@ -106,7 +106,7 @@ export function DashboardOverview({
         />
         <StatCard
           title="Total Organizations"
-          value={stats?.total_orgs ?? 0}
+          value={stats?.totalOrgs ?? 0}
           subtitle="All registered organizations"
           icon={Layers}
           iconClassName="bg-indigo-50 text-indigo-600"
@@ -138,7 +138,7 @@ export function DashboardOverview({
               ) : (
                 <>
                   <div className="text-2xl font-bold text-slate-800">
-                    {stats?.tier_counts.basic ?? 0}
+                    {stats?.tierCounts.basic ?? 0}
                   </div>
                   <p className="text-xs text-slate-500 mt-1">₱2 / student / yr</p>
                 </>
@@ -164,7 +164,7 @@ export function DashboardOverview({
               ) : (
                 <>
                   <div className="text-2xl font-bold text-blue-800">
-                    {stats?.tier_counts.plus ?? 0}
+                    {stats?.tierCounts.plus ?? 0}
                   </div>
                   <p className="text-xs text-blue-500 mt-1">₱3 / student / yr</p>
                 </>
@@ -190,7 +190,7 @@ export function DashboardOverview({
               ) : (
                 <>
                   <div className="text-2xl font-bold text-indigo-800">
-                    {stats?.tier_counts.premium ?? 0}
+                    {stats?.tierCounts.premium ?? 0}
                   </div>
                   <p className="text-xs text-indigo-500 mt-1">₱4 / student / yr</p>
                 </>

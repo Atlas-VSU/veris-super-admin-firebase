@@ -125,7 +125,7 @@ export function OrgSubscriptionsTable({
                   class: "bg-slate-100 text-slate-400 border-slate-200 hover:bg-slate-100",
                   icon: HelpCircle,
                 },
-              }[sub.subscription_status || "not_subscribed"];
+              }[sub.subscriptionStatus || "not_subscribed"];
 
               const StatusIcon = statusConfig.icon;
 
@@ -145,7 +145,7 @@ export function OrgSubscriptionsTable({
                           {org.name}
                         </p>
                         <p className="text-[11px] text-slate-400 font-mono font-medium">
-                          {org.short_name || "—"}
+                          {org.shortName || "—"}
                         </p>
                       </div>
                     </div>
@@ -164,7 +164,7 @@ export function OrgSubscriptionsTable({
                   {/* Subscription Tier */}
                   <TableCell className="py-3">
                     <div className="flex items-center gap-1.5">
-                      <TierBadge tier={sub.subscription_tier} />
+                      <TierBadge tier={sub.subscriptionTier} />
                       {selectedTerm?.isActive && (
                         <Button
                           variant="ghost"
@@ -193,7 +193,7 @@ export function OrgSubscriptionsTable({
                   {/* Expiration date */}
                   <TableCell className="py-3 hidden sm:table-cell">
                     <span className="text-xs text-slate-500 font-medium">
-                      {sub.expires_at ? format(parseISO(sub.expires_at), "MMM dd, yyyy") : "—"}
+                      {sub.expiresAt ? format(parseISO(sub.expiresAt), "MMM dd, yyyy") : "—"}
                     </span>
                   </TableCell>
 
@@ -201,7 +201,7 @@ export function OrgSubscriptionsTable({
                   <TableCell className="py-3 pr-4 text-right">
                     <div className="flex items-center justify-end gap-2">
                       {/* Renew Action button */}
-                      {["expired", "expiring_soon"].includes(sub.subscription_status) && selectedTerm?.isActive ? (
+                      {["expired", "expiring_soon"].includes(sub.subscriptionStatus) && selectedTerm?.isActive ? (
                         <Button
                           size="sm"
                           onClick={() => onOpenRenew(org, sub)}
@@ -209,7 +209,7 @@ export function OrgSubscriptionsTable({
                         >
                           Renew
                         </Button>
-                      ) : sub.subscription_status === "not_subscribed" && selectedTerm?.isActive ? (
+                      ) : sub.subscriptionStatus === "not_subscribed" && selectedTerm?.isActive ? (
                         <Button
                           size="sm"
                           variant="outline"

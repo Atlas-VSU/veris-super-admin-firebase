@@ -57,7 +57,7 @@ export function ChangeTierDialog({
   // Sync form state when dialog opens / org changes
   useEffect(() => {
     if (open) {
-      const initialTier = currentSub?.subscription_tier ?? "basic";
+      const initialTier = currentSub?.subscriptionTier ?? "basic";
       setNewTier(initialTier || "basic");
       setAmountPaid(
         initialTier === "premium" ? 15000 : initialTier === "plus" ? 10000 : 5000
@@ -119,9 +119,9 @@ export function ChangeTierDialog({
                 Organization
               </p>
               <p className="text-sm font-bold text-slate-700">{org?.name}</p>
-              {currentSub?.subscription_tier && (
+              {currentSub?.subscriptionTier && (
                 <p className="text-xs text-slate-500 font-medium capitalize">
-                  Current tier: {currentSub.subscription_tier}
+                  Current tier: {currentSub.subscriptionTier}
                 </p>
               )}
             </div>
