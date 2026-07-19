@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { toast } from "sonner";
 import {
   Dialog,
@@ -21,29 +21,121 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Building2, RefreshCw } from "lucide-react";
+import { Building2, RefreshCw, Upload, X, QrCode } from "lucide-react";
 import type { OrgLevel, SuperAdminFaculty, SuperAdminProgram } from "../../types";
+
+export interface CreateOrgFormData {
+  name: string;
+  shortName: string;
+  level: OrgLevel;
+  adviser: string;
+  president: string;
+  contactEmail: string;
+  description: string;
+  facultyName: string | null;
+  facultyAcronym: string | null;
+  facultyId: string | null;
+  programId: string | null;
+  programName: string | null;
+  programAcronym: string | null;
+  logoFile: File | null;
+  treasurer: string;
+  treasurerNumber: string;
+  treasurerQrFile: File | null;
+  auditor: string | null;
+  auditorNumber: string | null;
+  auditorQrFile: File | null;
+}
 
 interface CreateOrgDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onCreate: (orgData: {
-    name: string;
-    shortName: string;
-    level: OrgLevel;
-    adviser: string;
-    president: string;
-    contactEmail: string;
-    description: string;
-    facultyName: string | null;
-    facultyAcronym: string | null;
-    facultyId: string | null;
-    programId: string | null;
-    programName: string | null;
-    programAcronym: string | null;
-  }) => Promise<void> | void;
+  onCreate: (orgData: CreateOrgFormData) => Promise<void> | void;
   faculties: SuperAdminFaculty[];
   programs: SuperAdminProgram[];
+}
+
+// Simple reusable image-upload control with preview + clear button
+function ImageUploadField({
+  id,
+  label,
+  file,
+  preview,
+  onChange,
+  onClear,
+  icon,
+  required = false,
+}: {
+  id: string;
+  label: string;
+  file: File | null;
+  preview: string | null;
+  onChange: (file: File | null) => void;
+  onClear: () => void;
+  icon?: React.ReactNode;
+  required?: boolean;
+}) {
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  return (
+    <div className="grid gap-2">
+      <Label htmlFor={id} className="text-xs font-semibold text-slate-600 uppercase">
+        {label} {required ? "" : <span className="normal-case text-slate-400">(optional)</span>}
+      </Label>
+
+      <input
+        ref={inputRef}
+        id={id}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={(e) => onChange(e.target.files?.[0] ?? null)}
+      />
+
+      {preview ? (
+        <div className="flex items-center gap-3">
+          <img
+            src={preview}
+            alt={`${label} preview`}
+            className="h-14 w-14 rounded-md object-cover border border-blue-100"
+          />
+          <div className="flex flex-col gap-1">
+            <span className="text-xs text-slate-500 truncate max-w-[180px]">{file?.name}</span>
+            <div className="flex gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs border-slate-200"
+                onClick={() => inputRef.current?.click()}
+              >
+                Replace
+              </Button>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="h-7 text-xs border-slate-200 text-red-500"
+                onClick={onClear}
+              >
+                <X className="h-3 w-3 mr-1" /> Remove
+              </Button>
+            </div>
+          </div>
+        </div>
+      ) : (
+        <Button
+          type="button"
+          variant="outline"
+          className="border-dashed border-blue-200 text-slate-500 h-16 flex flex-col gap-1"
+          onClick={() => inputRef.current?.click()}
+        >
+          {icon ?? <Upload className="h-4 w-4" />}
+          <span className="text-xs">Click to upload {label.toLowerCase()}</span>
+        </Button>
+      )}
+    </div>
+  );
 }
 
 export function CreateOrgDialog({
@@ -64,6 +156,70 @@ export function CreateOrgDialog({
   const [programId, setProgramId] = useState("none");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
+  // Logo
+  const [logoFile, setLogoFile] = useState<File | null>(null);
+  const [logoPreview, setLogoPreview] = useState<string | null>(null);
+
+  // Treasurer (required)
+  const [treasurer, setTreasurer] = useState("");
+  const [treasurerNumber, setTreasurerNumber] = useState("");
+  const [treasurerQrFile, setTreasurerQrFile] = useState<File | null>(null);
+  const [treasurerQrPreview, setTreasurerQrPreview] = useState<string | null>(null);
+
+  // Auditor (optional)
+  const [auditor, setAuditor] = useState("");
+  const [auditorNumber, setAuditorNumber] = useState("");
+  const [auditorQrFile, setAuditorQrFile] = useState<File | null>(null);
+  const [auditorQrPreview, setAuditorQrPreview] = useState<string | null>(null);
+
+  // Revoke object URLs on unmount to avoid memory leaks
+  useEffect(() => {
+    return () => {
+      if (logoPreview) URL.revokeObjectURL(logoPreview);
+      if (treasurerQrPreview) URL.revokeObjectURL(treasurerQrPreview);
+      if (auditorQrPreview) URL.revokeObjectURL(auditorQrPreview);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleFileSelect = (
+    file: File | null,
+    setFile: (f: File | null) => void,
+    preview: string | null,
+    setPreview: (p: string | null) => void
+  ) => {
+    if (preview) URL.revokeObjectURL(preview);
+    setFile(file);
+    setPreview(file ? URL.createObjectURL(file) : null);
+  };
+
+  const resetForm = () => {
+    setName("");
+    setShortName("");
+    setLevel("department");
+    setAdviser("");
+    setPresident("");
+    setContactEmail("");
+    setDescription("");
+    setFaculty("none");
+    setProgramId("none");
+
+    if (logoPreview) URL.revokeObjectURL(logoPreview);
+    if (treasurerQrPreview) URL.revokeObjectURL(treasurerQrPreview);
+    if (auditorQrPreview) URL.revokeObjectURL(auditorQrPreview);
+
+    setLogoFile(null);
+    setLogoPreview(null);
+    setTreasurer("");
+    setTreasurerNumber("");
+    setTreasurerQrFile(null);
+    setTreasurerQrPreview(null);
+    setAuditor("");
+    setAuditorNumber("");
+    setAuditorQrFile(null);
+    setAuditorQrPreview(null);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim()) return;
@@ -73,66 +229,71 @@ export function CreateOrgDialog({
       return;
     }
 
+    if (!treasurer.trim() || !treasurerNumber.trim()) {
+      toast.error("Please provide the treasurer's name and contact number.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      let facultyId: string | null = null;
-      let facultyName: string | null = null;
-      let facultyAcronym: string | null = null;
-      let programId: string | null = null;
-      let programName: string | null = null;
-      let programAcronym: string | null = null;
+      // NOTE: these are intentionally named differently from the
+      // `programId` state above -- reusing that name here previously
+      // shadowed the state value and silently broke program lookup.
+      let resolvedFacultyId: string | null = null;
+      let resolvedFacultyName: string | null = null;
+      let resolvedFacultyAcronym: string | null = null;
+      let resolvedProgramId: string | null = null;
+      let resolvedProgramName: string | null = null;
+      let resolvedProgramAcronym: string | null = null;
 
       if (level === "department") {
         const selectedProg = programs.find((p) => p.id === programId);
         if (selectedProg) {
-          programId = selectedProg.id;
-          programName = selectedProg.name;
-          programAcronym = selectedProg.acronym;
+          resolvedProgramId = selectedProg.id;
+          resolvedProgramName = selectedProg.name;
+          resolvedProgramAcronym = selectedProg.acronym;
 
           const selectedFac = faculties.find((f) => f.id === selectedProg.facultyId);
           if (selectedFac) {
-            facultyId = selectedFac.id;
-            facultyName = selectedFac.name;
-            facultyAcronym = selectedFac.acronym;
+            resolvedFacultyId = selectedFac.id;
+            resolvedFacultyName = selectedFac.name;
+            resolvedFacultyAcronym = selectedFac.acronym;
           }
         }
       } else if (level === "faculty") {
         const selectedFac = faculties.find((f) => f.acronym === faculty);
         if (selectedFac) {
-          facultyId = selectedFac.id;
-          facultyName = selectedFac.name;
-          facultyAcronym = selectedFac.acronym;
+          resolvedFacultyId = selectedFac.id;
+          resolvedFacultyName = selectedFac.name;
+          resolvedFacultyAcronym = selectedFac.acronym;
         }
       }
 
       await onCreate({
         name,
-        shortName: shortName,
+        shortName,
         level,
         adviser,
         president,
-        contactEmail: contactEmail,
+        contactEmail,
         description,
-        facultyName,
-        facultyAcronym,
-        facultyId,
-        programId,
-        programName,
-        programAcronym,
+        facultyName: resolvedFacultyName,
+        facultyAcronym: resolvedFacultyAcronym,
+        facultyId: resolvedFacultyId,
+        programId: resolvedProgramId,
+        programName: resolvedProgramName,
+        programAcronym: resolvedProgramAcronym,
+        logoFile,
+        treasurer,
+        treasurerNumber,
+        treasurerQrFile,
+        auditor: auditor.trim() ? auditor : null,
+        auditorNumber: auditorNumber.trim() ? auditorNumber : null,
+        auditorQrFile,
       });
 
-      // Reset Form
-      setName("");
-      setShortName("");
-      setLevel("department");
-      setAdviser("");
-      setPresident("");
-      setContactEmail("");
-      setDescription("");
-      setFaculty("none");
-      setProgramId("none");
-
+      resetForm();
       onOpenChange(false);
     } finally {
       setIsSubmitting(false);
@@ -153,6 +314,16 @@ export function CreateOrgDialog({
           </DialogHeader>
 
           <div className="grid gap-4 py-4 text-xs">
+            <ImageUploadField
+              id="org-logo"
+              label="Organization Logo"
+              file={logoFile}
+              preview={logoPreview}
+              onChange={(f) => handleFileSelect(f, setLogoFile, logoPreview, setLogoPreview)}
+              onClear={() => handleFileSelect(null, setLogoFile, logoPreview, setLogoPreview)}
+              icon={<Building2 className="h-4 w-4" />}
+            />
+
             <div className="grid gap-2">
               <Label htmlFor="org-name" className="text-xs font-semibold text-slate-600 uppercase">
                 Organization Name
@@ -299,9 +470,106 @@ export function CreateOrgDialog({
                 required
               />
             </div>
+
+            {/* Treasurer -- required */}
+            <div className="border-t border-blue-50 pt-4 mt-1">
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">
+                Treasurer Details
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="treasurer-name" className="text-xs font-semibold text-slate-600 uppercase">
+                    Treasurer Name
+                  </Label>
+                  <Input
+                    id="treasurer-name"
+                    placeholder="e.g. Maria Santos"
+                    value={treasurer}
+                    onChange={(e) => setTreasurer(e.target.value)}
+                    className="border-blue-100"
+                    required
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="treasurer-number" className="text-xs font-semibold text-slate-600 uppercase">
+                    Contact Number
+                  </Label>
+                  <Input
+                    id="treasurer-number"
+                    placeholder="e.g. 09171234567"
+                    value={treasurerNumber}
+                    onChange={(e) => setTreasurerNumber(e.target.value)}
+                    className="border-blue-100"
+                    required
+                  />
+                </div>
+              </div>
+
+              <ImageUploadField
+                id="treasurer-qr"
+                label="Treasurer's GCash QR Code"
+                file={treasurerQrFile}
+                preview={treasurerQrPreview}
+                onChange={(f) =>
+                  handleFileSelect(f, setTreasurerQrFile, treasurerQrPreview, setTreasurerQrPreview)
+                }
+                onClear={() =>
+                  handleFileSelect(null, setTreasurerQrFile, treasurerQrPreview, setTreasurerQrPreview)
+                }
+                icon={<QrCode className="h-4 w-4" />}
+                required
+              />
+            </div>
+
+            {/* Auditor -- optional */}
+            <div className="border-t border-blue-50 pt-4 mt-1">
+              <p className="text-xs font-bold text-slate-700 uppercase tracking-wide mb-3">
+                Auditor Details <span className="normal-case font-normal text-slate-400">(optional)</span>
+              </p>
+              <div className="grid grid-cols-2 gap-4 mb-4">
+                <div className="grid gap-2">
+                  <Label htmlFor="auditor-name" className="text-xs font-semibold text-slate-600 uppercase">
+                    Auditor Name
+                  </Label>
+                  <Input
+                    id="auditor-name"
+                    placeholder="e.g. Juan Dela Cruz"
+                    value={auditor}
+                    onChange={(e) => setAuditor(e.target.value)}
+                    className="border-blue-100"
+                  />
+                </div>
+                <div className="grid gap-2">
+                  <Label htmlFor="auditor-number" className="text-xs font-semibold text-slate-600 uppercase">
+                    Contact Number
+                  </Label>
+                  <Input
+                    id="auditor-number"
+                    placeholder="e.g. 09171234567"
+                    value={auditorNumber}
+                    onChange={(e) => setAuditorNumber(e.target.value)}
+                    className="border-blue-100"
+                  />
+                </div>
+              </div>
+
+              <ImageUploadField
+                id="auditor-qr"
+                label="Auditor's GCash QR Code"
+                file={auditorQrFile}
+                preview={auditorQrPreview}
+                onChange={(f) =>
+                  handleFileSelect(f, setAuditorQrFile, auditorQrPreview, setAuditorQrPreview)
+                }
+                onClear={() =>
+                  handleFileSelect(null, setAuditorQrFile, auditorQrPreview, setAuditorQrPreview)
+                }
+                icon={<QrCode className="h-4 w-4" />}
+              />
+            </div>
           </div>
 
-          <DialogFooter className="gap-2 sm:gap-0">
+          <DialogFooter className="gap-2">
             <Button
               type="button"
               variant="outline"

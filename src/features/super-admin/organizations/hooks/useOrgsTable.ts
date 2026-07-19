@@ -5,6 +5,12 @@ import { getFaculties } from "@/firebase/faculties";
 import { getPrograms } from "@/firebase/programs";
 import { toast } from "sonner";
 import { Organization } from "@/constants/types";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import { CreateOrgFormData } from "../components/CreateOrgDialog";
+import { EditOrgFormData } from "../components/EditOrgDialog";
+import { batchUpdateAccounts, getAccountsByOrgId } from "@/firebase/accounts";
+import { BatteryCharging } from "lucide-react";
+import { is } from "date-fns/locale";
 
 interface useOrgsTableProps {
   itemsPerPage: number;
@@ -32,6 +38,15 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
   const [archiveTargetOrg, setArchiveTargetOrg] = useState<SuperAdminOrg | null>(null);
   const [totalOrgsCount, setTotalOrgsCount] = useState(0);
 
+  async function uploadFile(file: File, path: string): Promise<string>{
+    const storage = getStorage();
+    const storageRef = ref(storage, path);
+
+    await uploadBytes(storageRef, file);
+    const downloadUrl = await getDownloadURL(storageRef);
+
+    return downloadUrl;
+  }
 
   useEffect(() => {
     async function loadData() {
@@ -98,23 +113,15 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
 
   }, [search, levelFilter, statusFilter, tierFilter, sortBy, currentPage]);
 
-  const handleCreateOrg = async (orgData: {
-    name: string;
-    shortName: string;
-    level: OrgLevel;
-    adviser: string;
-    president: string;
-    contactEmail: string;
-    description: string;
-    facultyName: string | null;
-    facultyAcronym: string | null;
-    facultyId: string | null;
-    programId: string | null;
-    programName: string | null;
-    programAcronym: string | null;
-  }) => {
+  const handleCreateOrg = async (orgData: CreateOrgFormData) => {
     try {
-      const newId = await createOrganization(orgData);
+      const logoUrl = orgData.logoFile ?
+        await uploadFile(orgData.logoFile, `org-logos/${orgData.shortName} LOGO-${Date.now()}`) : null;
+      const treasurerQrUrl = orgData.treasurerQrFile ?
+        await uploadFile(orgData.treasurerQrFile, `org-qrs/${orgData.shortName} TREASURER-${Date.now()}`) : null;
+      const auditorQrUrl = orgData.auditorQrFile ?
+        await uploadFile(orgData.auditorQrFile, `org-qrs/${orgData.shortName} AUDITOR-${Date.now()}`) : null;
+      const newId = await createOrganization(orgData, logoUrl, treasurerQrUrl, auditorQrUrl);
 
       const newOrg: SuperAdminOrg = {
         id: newId,
@@ -132,6 +139,13 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
         subscriptionTier: null,
         adviser: orgData.adviser,
         president: orgData.president,
+        orgAuditorName: orgData.auditor,
+        orgAuditorNumber: orgData.auditorNumber,
+        orgAuditorUrl: auditorQrUrl,
+        orgLogoUrl: logoUrl,
+        orgTreasurerName: orgData.treasurer,
+        orgTreasurerNumber: orgData.treasurerNumber,
+        orgTreasurerUrl: treasurerQrUrl,
         contactEmail: orgData.contactEmail,
         description: orgData.description,
         createdAt: new Date().toISOString().split("T")[0],
@@ -146,33 +160,42 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
 
   const handleEditOrg = async (
     orgId: string,
-    orgData: {
-      name: string;
-      shortName: string;
-      level: OrgLevel;
-      adviser: string;
-      president: string;
-      contactEmail: string;
-      description: string;
-      facultyName: string | null;
-      facultyAcronym: string | null;
-      facultyId: string | null;
-      programId: string | null;
-      programName: string | null;
-      programAcronym: string | null;
-    }
+    orgData: EditOrgFormData
   ) => {
     try {
+      const logoUrl = orgData.logoFile && orgData.changedLogo?
+        await uploadFile(orgData.logoFile, `org-logos/${orgData.shortName} LOGO-${Date.now()}`)
+        : orgData.removeLogo ? null : orgData.existingLogoUrl || null;
+      
+      const treasurerQrUrl = orgData.treasurerQrFile && orgData.changedTreasurerQr?
+        await uploadFile(orgData.treasurerQrFile, `org-qrs/${orgData.shortName} TREASURER-${Date.now()}`)
+        : orgData.removeTreasurerQr ? null : orgData.existingTreasurerQrUrl || null;
+      
+      const auditorQrUrl = orgData.auditorQrFile && orgData.changedAuditorQr?
+        await uploadFile(orgData.auditorQrFile, `org-qrs/${orgData.shortName} AUDITOR-${Date.now()}`)
+        : orgData.removeAuditorQr? null: orgData.existingAuditorQrUrl || null;
+      
       await updateOrganization(orgId, {
         name: orgData.name,
         shortName: orgData.shortName,
-        level: orgData.level === "department" ? 1 : orgData.level === "faculty" ? 2 : 3,
+        accessLevel: orgData.level === "department" ? 1 : orgData.level === "faculty" ? 2 : 3,
         adviser: orgData.adviser,
         president: orgData.president,
         contactEmail: orgData.contactEmail,
         description: orgData.description,
         facultyId: orgData.facultyId || null,
-        programId: orgData.programId || null
+        programId: orgData.programId || null,
+        orgAuditorName: orgData.auditor,
+        orgAuditorNumber: orgData.auditorNumber,
+        orgAuditorUrl: auditorQrUrl,
+        orgTreasurerName: orgData.treasurer,
+        orgTreasurerNumber: orgData.treasurerNumber,
+        orgTreasurerUrl: treasurerQrUrl,
+        orgLogoUrl: logoUrl,
+        metadata: {
+          updatedAt: new Date(),
+        },
+
       });
 
       setLocalOrgs((prev) =>
@@ -209,6 +232,8 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
       await updateOrganization(archiveTargetOrg.id, {
         isArchived: nextArchiveState,
       });
+      const accounts = await getAccountsByOrgId(archiveTargetOrg.id);
+      await batchUpdateAccounts(accounts, { isActive: !nextArchiveState, isDeleted: nextArchiveState });
 
       setLocalOrgs((prev) =>
         prev.map((org) => {

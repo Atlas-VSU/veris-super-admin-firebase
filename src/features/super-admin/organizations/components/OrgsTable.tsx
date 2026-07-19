@@ -231,7 +231,7 @@ export function OrgsTable({isLoading = false }: OrgsTableProps) {
               {!archiveTargetOrg?.isArchived && " Archiving will hide the organization from typical listings."}
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <AlertDialogFooter className="gap-2 sm:gap-0">
+          <AlertDialogFooter className="gap-2 ">
             <AlertDialogCancel className="border-slate-200 text-slate-600 text-xs h-9">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleToggleArchiveSubmit}

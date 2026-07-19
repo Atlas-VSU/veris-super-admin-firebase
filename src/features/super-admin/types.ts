@@ -20,6 +20,13 @@ export interface SuperAdminOrg {
   subscriptionTier: SubscriptionTier | null;
   adviser?: string | null;
   president?: string | null;
+  orgAuditorName?: string | null;
+  orgAuditorNumber?: string | null;
+  orgAuditorUrl?: string | null;
+  orgLogoUrl?: string | null;
+  orgTreasurerName?: string | null;
+  orgTreasurerNumber?: string | null;
+  orgTreasurerUrl?: string | null;
   contactEmail?: string | null;
   description?: string | null;
   createdAt?: string | null;
@@ -29,6 +36,9 @@ export interface SuperAdminOrgAccount {
   id: string;
   orgId: string;
   orgName: string | null;
+  positionName: string | null;
+  firstName: string;
+  lastName: string;
   fullName: string;
   email: string;
   isActive: boolean;
