@@ -1,28 +1,14 @@
-import type { OrgLevel, SubscriptionTier, SuperAdminOrg, SuperAdminOrgAccount } from "@/features/super-admin/types";
+import type { OrgLevel, SuperAdminOrgAccount } from "@/features/super-admin/types";
 import { addDoc, collection, doc, getCountFromServer, getDocs, limit, orderBy, query, startAfter, updateDoc, where } from "firebase/firestore";
 import { db } from "./firebase.config";
-import { toISOString } from "@/utils/dateUtils";
+import { getOrgAccounts } from "./accounts";
+import { CreateOrgFormData } from "@/features/super-admin/organizations/components/CreateOrgDialog";
 
-export interface CreateOrgPayload {
-  name: string;
-  shortName: string;
-  level: OrgLevel;
-  adviser: string;
-  president: string;
-  contactEmail: string;
-  description: string;
-  facultyName: string | null;
-  facultyAcronym: string | null;
-  facultyId: string | null;
-  programId: string | null;
-  programName: string | null;
-  programAcronym: string | null;
-}
 
 
 const orgCollection = collection(db, "organizations");
 
-export async function createOrganization(orgData: CreateOrgPayload): Promise<string> {
+export async function createOrganization(orgData: CreateOrgFormData, logoUrl: string | null, treasurerQrUrl: string | null, auditorQrUrl: string | null): Promise<string> {
 
   try {
     let level = 1;
@@ -32,21 +18,21 @@ export async function createOrganization(orgData: CreateOrgPayload): Promise<str
     console.log("Creating organization with data:", orgData, "and level:", level);
     const newOrg = {
       accessLevel: level,
-      facultyId: orgData.facultyId ? orgData.facultyId : null,
+      facultyId: orgData.facultyId && level === 2? orgData.facultyId : null,
       isArchived: false,
       name: orgData.name,
       adviser: orgData.adviser,
       president: orgData.president,
       contactEmail: orgData.contactEmail,
       description: orgData.description,
-      orgAuditorName: "",
-      orgAuditorNumber: "",
-      orgAuditorUrl: "",
-      orgLogoUrl: "",
-      orgTreasurerName: "",
-      orgTreasurerNumber: "",
-      orgTreasurerUrl: "",
-      programId: orgData.programId ? orgData.programId : null,
+      orgAuditorName: orgData.auditor,
+      orgAuditorNumber: orgData.auditorNumber,
+      orgAuditorUrl: auditorQrUrl,
+      orgLogoUrl: logoUrl,
+      orgTreasurerName: orgData.treasurer,
+      orgTreasurerNumber: orgData.treasurerNumber,
+      orgTreasurerUrl: treasurerQrUrl,
+      programId: orgData.programId && level === 1? orgData.programId : null,
       shortName: orgData.shortName,
       subscribed: false,
       metadata: {
@@ -73,29 +59,6 @@ export async function updateOrganization(orgId: string, orgData: any): Promise<v
 
 }
 
-export async function getOrgAccounts(
-  orgMap: Map<string, SuperAdminOrg>
-): Promise<SuperAdminOrgAccount[]> {
-  const q = query(collection(db, "users"), where("role", "==", "admin"), where("isDeleted", "==", false));
-  const snap = await getDocs(q);
-  return snap.docs.map((doc) => {
-    const d = doc.data();
-    const orgId: string = d.orgId ?? "";
-    const org = orgId ? orgMap.get(orgId) ?? null : null;
-
-    return {
-      id: doc.id,
-      orgId: orgId,
-      orgName: org?.name ?? null,
-      fullName: (`${d.firstName ?? ""} ${d.lastName ?? ""}`.trim()) || "Admin User",
-      email: d.email ?? "",
-      isActive: d.isActive ?? d.isActive ?? true,
-      isDeleted: d.isDeleted ?? false,
-      createdAt: toISOString(d.createdAt),
-    };
-  });
-}
-
 
 export const fetchOrganizationsPaginated = async (
   pageSize: number = 10,
@@ -107,17 +70,16 @@ export const fetchOrganizationsPaginated = async (
   tierFilter: string = "all",
 ) => {
   let constraints: any[] = []; 
-  if (statFilter === "all") {
-      constraints.push(where("isArchived", "==", false));
-   }
-  if(statFilter === "archived") {
-    constraints.push(where("isArchived", "==", true));
-  }
-  if(statFilter === "active") {
-    constraints.push(where("isArchived", "==", false), where("subscribed", "==", true));
-  }
-  if(statFilter === "inactive") {
-    constraints.push(where("isArchived", "==", false), where("subscribed", "==", false));
+  if (statFilter !== "all") {
+    if (statFilter === "archived") {
+      constraints.push(where("isArchived", "==", true));
+    }
+    if (statFilter === "active") {
+      constraints.push(where("isArchived", "==", false), where("subscribed", "==", true));
+    }
+    if (statFilter === "inactive") {
+      constraints.push(where("isArchived", "==", false), where("subscribed", "==", false));
+    }
   }
   
   if (sortBy === "name-asc") {

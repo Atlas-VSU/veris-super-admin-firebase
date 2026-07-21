@@ -89,7 +89,7 @@ export async function fetchOrganizations(
 export async function fetchOrgAccounts(
   orgMap: Map<string, SuperAdminOrg>
 ): Promise<SuperAdminOrgAccount[]> {
-  const snap = await adminDb.collection("users").where("role", "==", "admin").where("isDeleted", "==", false).get();
+  const snap = await adminDb.collection("users").where("role", "==", "admin").get();
   return snap.docs.map((doc) => {
     const d = doc.data();
     const orgId: string = d.orgId ?? "";
@@ -99,6 +99,9 @@ export async function fetchOrgAccounts(
       id: doc.id,
       orgId: orgId,
       orgName: org?.name ?? null,
+      positionName: d.name ?? "",
+      firstName: d.firstName ?? "",
+      lastName: d.lastName ?? "",
       fullName: (`${d.firstName ?? ""} ${d.lastName ?? ""}`.trim()) || "Admin User",
       email: d.email ?? "",
       isActive: d.isActive ?? d.isActive ?? true,

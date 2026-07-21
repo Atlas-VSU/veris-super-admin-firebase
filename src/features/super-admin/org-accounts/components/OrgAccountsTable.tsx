@@ -23,9 +23,13 @@ import type {
   SuperAdminOrgAccount,
   SuperAdminOrg,
 } from "@/features/super-admin/types";
-import { Users, Search, CheckCircle2, XCircle } from "lucide-react";
+import { Users, Search, CheckCircle2, XCircle, MoreVertical, Edit2, Eye, Archive } from "lucide-react";
 import { format } from "date-fns";
 import { useOrgAccountsTable } from "../hooks/useOrgAccountsTable";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { EditAccountDialog } from "./EditAccountDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface OrgAccountsTableProps {
   accounts: SuperAdminOrgAccount[];
@@ -46,12 +50,33 @@ export function OrgAccountsTable({
     search,
     setSearch,
     selectedAccount,
+    setSelectedAccount,
     sheetOpen,
     setSheetOpen,
     filtered,
     linkedOrg,
     handleRowClick,
+    handleEditAccount,
+    editOpen,
+    setEditOpen,
+    deleteConfirmOpen,
+    setDeleteConfirmOpen,
+    handleToggleDeleteSubmit
   } = useOrgAccountsTable(accounts, orgs);
+
+  const onTriggerEdit = (account: SuperAdminOrgAccount | null) => {
+    if (account) {
+      setSelectedAccount(account);
+      setEditOpen(true);
+    }
+  }
+  
+  const onToggleDeleteConfirm = (account: SuperAdminOrgAccount | null) => {
+    if (account) {
+      setSelectedAccount(account);
+      setDeleteConfirmOpen(true);
+    }
+   }
 
   return (
     <>
@@ -121,11 +146,11 @@ export function OrgAccountsTable({
               <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3">
                 Active
               </TableHead>
-              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3 hidden sm:table-cell">
-                Deleted
-              </TableHead>
               <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3 hidden lg:table-cell">
                 Created At
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">
+                Action
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -160,11 +185,11 @@ export function OrgAccountsTable({
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                         <span className="text-xs font-semibold text-blue-600">
-                          {account.fullName.charAt(0).toUpperCase()}
+                          {account.firstName.charAt(0).toUpperCase()+account.lastName.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <span className="text-sm font-medium text-slate-800 truncate max-w-[160px]">
-                        {account.fullName}
+                        {account.firstName+" "+account.lastName}
                       </span>
                     </div>
                   </TableCell>
@@ -193,13 +218,6 @@ export function OrgAccountsTable({
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="py-3 hidden sm:table-cell">
-                    {account.isDeleted ? (
-                      <StatusBadge variant="deleted" />
-                    ) : (
-                      <span className="text-xs text-slate-300">—</span>
-                    )}
-                  </TableCell>
                   <TableCell className="py-3 hidden lg:table-cell">
                     <span className="text-xs text-slate-400">
                       {account.createdAt
@@ -207,6 +225,31 @@ export function OrgAccountsTable({
                         : "—"}
                     </span>
                   </TableCell>
+                  <TableCell className="py-3 pr-4 text-center" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-700">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-white border border-slate-100 text-xs">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleRowClick(account)} className="flex items-center gap-2">
+                        <Eye className="h-3.5 w-3.5 text-slate-400" /> View Account
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onTriggerEdit(account)} className="flex items-center gap-2">
+                        <Edit2 className="h-3.5 w-3.5 text-slate-400" /> Edit Account
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onToggleDeleteConfirm(account)}
+                        className="flex items-center gap-2 text-amber-600 focus:text-amber-700"
+                      >
+                          <Archive className="h-3.5 w-3.5 text-amber-400" /> {account.isDeleted ? "Reactivate Account" : "Delete Account"}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -221,6 +264,37 @@ export function OrgAccountsTable({
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />
+
+      <EditAccountDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        account={selectedAccount}
+        onSave={handleEditAccount}
+      />
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="bg-white border border-slate-100 rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Archive className="h-5 w-5 text-amber-500" /> Confirm Action
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-slate-500">
+              Are you sure you want to {selectedAccount?.isDeleted ? "reactivate" : "delete"} the account{" "}
+              <span className="font-bold text-slate-700">"{selectedAccount?.fullName}"</span>?
+              {!selectedAccount?.isDeleted && " Deleting will hide the organization from the system."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="border-slate-200 text-slate-600 text-xs h-9">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleToggleDeleteSubmit}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-9"
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
