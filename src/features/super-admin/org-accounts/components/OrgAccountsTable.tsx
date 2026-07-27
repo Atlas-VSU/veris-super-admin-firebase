@@ -47,6 +47,8 @@ export function OrgAccountsTable({
     setActiveFilter,
     deletedFilter,
     setDeletedFilter,
+    orgFilter,
+    setOrgFilter,
     search,
     setSearch,
     selectedAccount,
@@ -123,6 +125,36 @@ export function OrgAccountsTable({
             <SelectItem value="deleted">Deleted Only</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select
+          value={orgFilter}
+          onValueChange={(v) =>
+            setOrgFilter(v as typeof orgFilter)
+          }
+        >
+          <SelectTrigger className="w-[160px] h-9 text-sm border-blue-100">
+            <SelectValue placeholder="All Organizations" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Organizations</SelectItem>
+            {orgs.map((org) => (
+              <SelectItem key={org.id} value={org.id}>
+                {org.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        { (orgFilter != "all" || deletedFilter != "all" || activeFilter != "all" || search != "") && (
+          <Button variant={"ghost"} size={"sm"} onClick={() => {
+            setOrgFilter("all");
+            setDeletedFilter("all");
+            setActiveFilter("all");
+            setSearch("");
+          }}>
+            Clear Filters
+          </Button>
+        )}
 
         <span className="text-xs text-slate-400 ml-auto whitespace-nowrap">
           {filtered.length} result{filtered.length !== 1 ? "s" : ""}

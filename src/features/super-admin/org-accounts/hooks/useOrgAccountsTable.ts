@@ -7,6 +7,7 @@ import { toast } from "sonner";
 export function useOrgAccountsTable(accounts: SuperAdminOrgAccount[], orgs: SuperAdminOrg[]) {
   const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
   const [deletedFilter, setDeletedFilter] = useState<"all" | "notDeleted" | "deleted">("all");
+  const [orgFilter, setOrgFilter] = useState<string>("all");
   const [search, setSearch] = useState("");
   const [selectedAccount, setSelectedAccount] = useState<SuperAdminOrgAccount | null>(null);
   const [sheetOpen, setSheetOpen] = useState(false);
@@ -29,6 +30,7 @@ export function useOrgAccountsTable(accounts: SuperAdminOrgAccount[], orgs: Supe
       if (activeFilter === "inactive" && acc.isActive) return false;
       if (deletedFilter === "notDeleted" && acc.isDeleted) return false;
       if (deletedFilter === "deleted" && !acc.isDeleted) return false;
+      if (orgFilter !== "all" && acc.orgId !== orgFilter) return false;
       if (search.trim()) {
         const q = search.toLowerCase();
         return (
@@ -39,7 +41,7 @@ export function useOrgAccountsTable(accounts: SuperAdminOrgAccount[], orgs: Supe
       }
       return true;
     });
-  }, [accounts,localAccounts, activeFilter, deletedFilter, search]);
+  }, [accounts,localAccounts, activeFilter, deletedFilter, orgFilter, search]);
 
   const linkedOrg = selectedAccount
     ? orgMap.get(selectedAccount.orgId) ?? null
@@ -120,6 +122,8 @@ export function useOrgAccountsTable(accounts: SuperAdminOrgAccount[], orgs: Supe
     setActiveFilter,
     deletedFilter,
     setDeletedFilter,
+    orgFilter,
+    setOrgFilter,
     search,
     setSearch,
     selectedAccount,
