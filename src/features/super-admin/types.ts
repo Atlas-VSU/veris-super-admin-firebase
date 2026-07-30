@@ -7,28 +7,43 @@ export type SubscriptionTier = "basic" | "plus" | "premium";
 export interface SuperAdminOrg {
   id: string;
   name: string;
-  short_name: string;
+  shortName: string;
   level: OrgLevel;
-  faculty_id: string | null;
-  faculty_name: string | null;
-  faculty_acronym: string | null;
-  program_id: string | null;
-  program_name: string | null;
-  program_acronym: string | null;
-  is_archived: boolean;
+  facultyId: string | null;
+  facultyName: string | null;
+  facultyAcronym: string | null;
+  programId: string | null;
+  programName: string | null;
+  programAcronym: string | null;
+  isArchived: boolean;
   subscribed: boolean;
-  subscription_tier: SubscriptionTier | null;
+  subscriptionTier: SubscriptionTier | null;
+  adviser?: string | null;
+  president?: string | null;
+  orgAuditorName?: string | null;
+  orgAuditorNumber?: string | null;
+  orgAuditorUrl?: string | null;
+  orgLogoUrl?: string | null;
+  orgTreasurerName?: string | null;
+  orgTreasurerNumber?: string | null;
+  orgTreasurerUrl?: string | null;
+  contactEmail?: string | null;
+  description?: string | null;
+  createdAt?: string | null;
 }
 
 export interface SuperAdminOrgAccount {
   id: string;
-  org_id: string;
-  org_name: string | null;
-  full_name: string;
+  orgId: string;
+  orgName: string | null;
+  positionName: string | null;
+  firstName: string;
+  lastName: string;
+  fullName: string;
   email: string;
-  is_active: boolean;
-  is_deleted: boolean;
-  created_at: string | null;
+  isActive: boolean;
+  isDeleted: boolean;
+  createdAt: string | null;
 }
 
 export interface SuperAdminFaculty {
@@ -41,20 +56,52 @@ export interface SuperAdminProgram {
   id: string;
   name: string;
   acronym: string;
-  faculty_id: string;
+  facultyId: string;
 }
 
 // Dashboard aggregate stats 
 export interface DashboardStats {
-  total_subscribed: number;
-  tier_counts: {
+  totalSubscribed: number;
+  tierCounts: {
     basic: number;
     plus: number;
     premium: number;
   };
-  total_active_accounts: number;
-  total_archived: number;
-  total_orgs: number;
+  totalActiveAccounts: number;
+  totalArchived: number;
+  totalOrgs: number;
+}
+
+export interface Term {
+  id?: string;
+  AY: string;
+  semester: string;
+  isActive: boolean;
+  isDeleted?: boolean;
+  metadata?: {
+    createdAt: Date | string;
+    updatedAt: Date | string;
+  };
+}
+
+export interface OrgSubscription {
+  id?: string;
+  organizationId: string;
+  termId: string;
+  subscriptionTier: SubscriptionTier | null;
+  subscriptionStatus: "active" | "expiring_soon" | "expired" | "not_subscribed" | "inactive" | "grace_period";
+  startsAt?: string | null;
+  expiresAt: string | null;
+  renewedAt?: string | null;
+  renewedBy?: string | null;
+  notes?: string | null;
+  createdAt?: string;
+  updatedAt?: string;
+
+  // Payments integration properties retained for frontend demonstration
+  amountPaid: number;
+  paymentReference: string | null;
+  paymentMethod: string | null;
 }
 
 //  Full data payload returned by the server data layer 

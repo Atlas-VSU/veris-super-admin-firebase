@@ -1,5 +1,5 @@
 # VERIS — Super Admin Console
-> Platform-level administration portal for managing subscribing student organizations, accounts, and subscription tiers on USSC Connect.
+> Platform-level administration portal for managing subscribing student organizations, accounts, and subscription tiers on VERIS services.
 
 ---
 
@@ -16,6 +16,7 @@ Unlike the client-facing portals, this system uses a clean, neutral **Slate & In
 * **Platform Overview Dashboard**: Real-time aggregation of metrics including total registered organizations, active subscriptions, subscription tier breakdowns (Basic, Plus, Premium), active/deleted administrator accounts, and archived workspaces.
 * **Organization Directories**: Centralized directory to review and manage student organizations, classify access levels (Department, Faculty, Council), and configure their subscription limits.
 * **Administrator Account Management**: Track and manage the administrative user accounts assigned to each organization, toggle status flags (active/inactive), and monitor login logs.
+* **Terms & Subscription Management**: Administrative tools to create academic terms (AY & semester), track and filter active or expired subscriptions, update subscription tiers, record activation details (amount, payment method/ref), and view full organization history.
 * **Role-Locked Security**: Dual-layer authorization checks utilizing Next.js Edge Middleware and custom React Auth guards to strictly lock out unauthorized client users.
 
 ---
@@ -41,15 +42,28 @@ src/
 ├── app/
 │   ├── layout.tsx                # Root layout (providers, Montserrat font, theme)
 │   ├── globals.css               # Tailwind setup + Neutral/Indigo color tokens
-│   └── (super-admin)/            # Route Group enforcing Super-Admin Auth Shell
+│   └── super-admin/              # Route enforcing Super-Admin Auth Shell
 │       ├── layout.tsx            # Auth context guard, renders sidebar/mobile nav
-│       └── super-admin/          # Pages (dashboard, organizations, org-accounts)
+│       ├── dashboard/page.tsx    # Dashboard page
+│       ├── org-accounts/page.tsx # Org accounts page
+│       ├── organizations/page.tsx# Organizations directory page
+│       └── terms/page.tsx        # Terms & subscription management page
 ├── features/
-│   └── super-admin/              # Domain-specific components, types, and hooks
+│   └── super-admin/              # Domain-specific components, structured by feature:
+│       ├── dashboard/            # Overview metrics and statistics cards
+│       ├── org-accounts/         # Org admin accounts tables and detail sheets
+│       ├── organizations/        # Org directory components and creation/edit forms
+│       ├── terms/                # Subscription renewal, tier, history and log elements
+│       └── shared/               # Shared sidebars, layouts, badges and skeletons
 ├── firebase/
 │   ├── firebase.config.ts        # Client SDK config (browser safe)
 │   ├── firebase-admin.config.ts  # Admin SDK config (server only)
-│   └── super-admin.ts            # Server-side Firestore queries using Admin SDK
+│   ├── organizations.ts          # Client-side organization mutation handlers
+│   ├── subscriptions.ts          # Client-side subscription fetch/save queries
+│   ├── super-admin.ts            # Server-side Firestore queries using Admin SDK
+│   └── term.ts                   # Client-side academic terms queries
+├── utils/
+│   └── dateUtils.ts              # Central date parsing & formatting utility
 ├── context/
 │   └── AuthContext.tsx           # Global Firebase Authentication context
 ├── hooks/
@@ -59,7 +73,7 @@ src/
 
 ### Server vs. Client Component Boundary
 * **Server Components (Pages)**: Pages inside the `app` router act as server components, fetching critical administrative data directly using the Firestore Admin SDK (via `fetchSuperAdminData()`).
-* **Client Components (Views)**: Server data is serialized (converting Firebase Timestamps into ISO strings) and passed down to interactive client elements (charts, tables, sheets) underneath.
+* **Client Components (Views)**: Server and database data is serialized (converting Firebase Timestamps into ISO strings using our centralized `toISOString` utility) and passed down to interactive client elements (charts, tables, sheets) underneath.
 
 ---
 

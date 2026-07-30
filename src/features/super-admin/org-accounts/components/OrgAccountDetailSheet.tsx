@@ -8,8 +8,8 @@ import {
   SheetDescription,
 } from "@/components/ui/sheet";
 import { Separator } from "@/components/ui/separator";
-import { StatusBadge } from "./StatusBadge";
-import { TierBadge } from "./TierBadge";
+import { StatusBadge } from "@/features/super-admin/shared/components/StatusBadge";
+import { TierBadge } from "@/features/super-admin/shared/components/TierBadge";
 import type {
   SuperAdminOrgAccount,
   SuperAdminOrg,
@@ -93,7 +93,7 @@ export function OrgAccountDetailSheet({
               </div>
               <div className="min-w-0">
                 <SheetTitle className="text-base font-bold text-slate-800 leading-tight">
-                  {account.full_name}
+                  {account.fullName}
                 </SheetTitle>
                 <SheetDescription className="text-sm text-slate-500 mt-0.5">
                   {account.email}
@@ -103,9 +103,9 @@ export function OrgAccountDetailSheet({
 
             {/* Status badges */}
             <div className="flex flex-wrap gap-2 mt-3">
-              {linkedOrg?.subscription_tier && <TierBadge tier={linkedOrg.subscription_tier} />}
-              <StatusBadge variant={account.is_active ? "active" : "inactive"} />
-              {account.is_deleted && <StatusBadge variant="deleted" />}
+              {linkedOrg?.subscriptionTier && <TierBadge tier={linkedOrg.subscriptionTier} />}
+              <StatusBadge variant={account.isActive ? "active" : "inactive"} />
+              {account.isDeleted && <StatusBadge variant="deleted" />}
             </div>
           </SheetHeader>
 
@@ -120,7 +120,7 @@ export function OrgAccountDetailSheet({
               <DetailRow
                 icon={User}
                 label="Full Name"
-                value={account.full_name}
+                value={account.fullName}
               />
               <DetailRow
                 icon={Mail}
@@ -131,7 +131,7 @@ export function OrgAccountDetailSheet({
                 icon={User}
                 label="Active Status"
                 value={
-                  account.is_active ? (
+                  account.isActive ? (
                     <span className="flex items-center gap-1 text-emerald-600">
                       <CheckCircle2 className="h-3.5 w-3.5" /> Active
                     </span>
@@ -146,7 +146,7 @@ export function OrgAccountDetailSheet({
                 icon={XCircle}
                 label="Deletion Status"
                 value={
-                  account.is_deleted ? (
+                  account.isDeleted ? (
                     <StatusBadge variant="deleted" />
                   ) : (
                     <span className="text-emerald-600 text-sm">Not deleted</span>
@@ -157,8 +157,8 @@ export function OrgAccountDetailSheet({
                 icon={Calendar}
                 label="Created At"
                 value={
-                  account.created_at
-                    ? format(new Date(account.created_at), "PPP p")
+                  account.createdAt
+                    ? format(new Date(account.createdAt), "PPP p")
                     : "—"
                 }
               />
@@ -182,7 +182,7 @@ export function OrgAccountDetailSheet({
                 <DetailRow
                   icon={Tag}
                   label="Short Name"
-                  value={linkedOrg.short_name || "—"}
+                  value={linkedOrg.shortName || "—"}
                 />
                 <DetailRow
                   icon={GraduationCap}
@@ -200,8 +200,8 @@ export function OrgAccountDetailSheet({
                   icon={BookOpen}
                   label="Faculty"
                   value={
-                    linkedOrg.faculty_name
-                      ? `${linkedOrg.faculty_name}${linkedOrg.faculty_acronym ? ` (${linkedOrg.faculty_acronym})` : ""}`
+                    linkedOrg.facultyName
+                      ? `${linkedOrg.facultyName}${linkedOrg.facultyAcronym ? ` (${linkedOrg.facultyAcronym})` : ""}`
                       : "—"
                   }
                 />
@@ -209,15 +209,15 @@ export function OrgAccountDetailSheet({
                   icon={BookOpen}
                   label="Program"
                   value={
-                    linkedOrg.program_name
-                      ? `${linkedOrg.program_name}${linkedOrg.program_acronym ? ` (${linkedOrg.program_acronym})` : ""}`
+                    linkedOrg.programName
+                      ? `${linkedOrg.programName}${linkedOrg.programAcronym ? ` (${linkedOrg.programAcronym})` : ""}`
                       : "—"
                   }
                 />
                 <DetailRow
                   icon={CreditCard}
                   label="Subscription Tier"
-                  value={<TierBadge tier={linkedOrg.subscription_tier} />}
+                  value={<TierBadge tier={linkedOrg.subscriptionTier} />}
                 />
                 <DetailRow
                   icon={CheckCircle2}
@@ -234,7 +234,7 @@ export function OrgAccountDetailSheet({
                     )
                   }
                 />
-                {linkedOrg.is_archived && (
+                {linkedOrg.isArchived && (
                   <DetailRow
                     icon={Archive}
                     label="Archived"

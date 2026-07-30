@@ -173,7 +173,6 @@ export function HomePageLayout() {
             <span className="font-mono text-base font-bold tracking-[0.32em] text-foreground">
               VERIS
             </span>
-            <span className="size-1.5 rounded-full bg-highlight shadow-[0_0_12px_rgba(253,197,48,.7)]" />
           </div>
           <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.22em] text-muted-foreground">
             Super Admin Console

@@ -1,9 +1,8 @@
-import { fetchSuperAdminData } from "@/firebase/super-admin";
-import { OrgsTable } from "@/features/super-admin/components/OrgsTable";
+
+import { OrgsTable } from "@/features/super-admin/organizations/components/OrgsTable";
 import { Building2 } from "lucide-react";
 
 export default async function SuperAdminOrganizationsPage() {
-  const { orgs, accounts } = await fetchSuperAdminData();
 
   return (
     <div className="space-y-6 animate-page-enter">
@@ -20,7 +19,7 @@ export default async function SuperAdminOrganizationsPage() {
       </div>
 
       {/* Table */}
-      <OrgsTable orgs={orgs} accounts={accounts} />
+      <OrgsTable/>
     </div>
   );
 }

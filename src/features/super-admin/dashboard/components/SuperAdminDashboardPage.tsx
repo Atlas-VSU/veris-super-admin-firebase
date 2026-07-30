@@ -1,5 +1,5 @@
 import { fetchSuperAdminData } from "@/firebase/super-admin";
-import { DashboardOverview } from "@/features/super-admin/components/DashboardOverview";
+import { DashboardOverview } from "@/features/super-admin/dashboard/components/DashboardOverview";
 import { ShieldCheck } from "lucide-react";
 
 export default async function SuperAdminDashboardPage() {

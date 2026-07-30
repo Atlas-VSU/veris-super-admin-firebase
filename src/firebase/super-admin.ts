@@ -16,20 +16,9 @@ import type {
   SubscriptionTier,
   OrgLevel,
 } from "@/features/super-admin/types";
-import type { Timestamp } from "firebase-admin/firestore";
+import { toISOString } from "@/utils/dateUtils";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
-
-function toISOString(value: unknown): string | null {
-  if (!value) return null;
-  // Firebase Admin Timestamp has a toDate() method
-  if (typeof (value as Timestamp).toDate === "function") {
-    return (value as Timestamp).toDate().toISOString();
-  }
-  if (value instanceof Date) return value.toISOString();
-  if (typeof value === "string") return value;
-  return null;
-}
 
 // ─── Faculties ────────────────────────────────────────────────────────────────
 
@@ -55,7 +44,7 @@ export async function fetchPrograms(): Promise<SuperAdminProgram[]> {
       id: doc.id,
       name: d.name ?? "",
       acronym: d.acronym ?? "",
-      faculty_id: d.faculty_id ?? d.facultyId ?? "",
+      facultyId: d.facultyId ?? "",
     };
   });
 }
@@ -66,38 +55,31 @@ export async function fetchOrganizations(
   facultyMap: Map<string, SuperAdminFaculty>,
   programMap: Map<string, SuperAdminProgram>
 ): Promise<SuperAdminOrg[]> {
-  const snap = await adminDb.collection("organizations").get();
+  const snap = await adminDb.collection("organizations").where("isArchived", "==", false).get();
   return snap.docs.map((doc) => {
     const d = doc.data();
 
-    const facultyId: string | null = d.faculty_id ?? d.facultyId ?? null;
-    const programId: string | null = d.program_id ?? d.programId ?? null;
+    const facultyId: string | null = d.facultyId ?? null;
+    const programId: string | null = d.programId ?? null;
 
     const faculty = facultyId ? facultyMap.get(facultyId) ?? null : null;
     const program = programId ? programMap.get(programId) ?? null : null;
 
-    const accessLevelValue = d.accessLevel ?? d.access_level ?? d.level;
-    let computedLevel: OrgLevel = "department";
-    if (accessLevelValue === 2 || accessLevelValue === "2" || accessLevelValue === "faculty") {
-      computedLevel = "faculty";
-    } else if (accessLevelValue === 3 || accessLevelValue === "3" || accessLevelValue === "council") {
-      computedLevel = "council";
-    }
 
     return {
       id: doc.id,
       name: d.name ?? "",
-      short_name: d.short_name ?? d.shortName ?? "",
-      level: computedLevel,
-      faculty_id: facultyId,
-      faculty_name: faculty?.name ?? null,
-      faculty_acronym: faculty?.acronym ?? null,
-      program_id: programId,
-      program_name: program?.name ?? null,
-      program_acronym: program?.acronym ?? null,
-      is_archived: d.is_archived ?? d.isArchived ?? false,
+      shortName: d.shortName ?? "",
+      level: d.accessLevel,
+      facultyId: facultyId,
+      facultyName: faculty?.name ?? null,
+      facultyAcronym: faculty?.acronym ?? null,
+      programId: programId,
+      programName: program?.name ?? null,
+      programAcronym: program?.acronym ?? null,
+      isArchived: d.isArchived ?? d.isArchived ?? false,
       subscribed: d.subscribed ?? false,
-      subscription_tier: (d.subscription_tier ?? null) as SubscriptionTier | null,
+      subscriptionTier: (d.subscriptionTier ?? null) as SubscriptionTier | null,
     };
   });
 }
@@ -110,18 +92,21 @@ export async function fetchOrgAccounts(
   const snap = await adminDb.collection("users").where("role", "==", "admin").get();
   return snap.docs.map((doc) => {
     const d = doc.data();
-    const orgId: string = d.orgId ?? d.org_id ?? "";
+    const orgId: string = d.orgId ?? "";
     const org = orgId ? orgMap.get(orgId) ?? null : null;
 
     return {
       id: doc.id,
-      org_id: orgId,
-      org_name: org?.name ?? null,
-      full_name: (d.name ?? d.fullName ?? d.full_name ?? `${d.firstName ?? ""} ${d.lastName ?? ""}`.trim()) || "Admin User",
+      orgId: orgId,
+      orgName: org?.name ?? null,
+      positionName: d.name ?? "",
+      firstName: d.firstName ?? "",
+      lastName: d.lastName ?? "",
+      fullName: (`${d.firstName ?? ""} ${d.lastName ?? ""}`.trim()) || "Admin User",
       email: d.email ?? "",
-      is_active: d.is_active ?? d.isActive ?? true,
-      is_deleted: d.is_deleted ?? d.isDeleted ?? false,
-      created_at: toISOString(d.created_at ?? d.createdAt ?? d.metadata?.createdAt),
+      isActive: d.isActive ?? d.isActive ?? true,
+      isDeleted: d.isDeleted ?? false,
+      createdAt: toISOString(d.createdAt),
     };
   });
 }
@@ -135,19 +120,19 @@ export function computeStats(
   const subscribedOrgs = orgs.filter((o) => o.subscribed);
   const tierCounts = { basic: 0, plus: 0, premium: 0 };
   for (const org of subscribedOrgs) {
-    if (org.subscription_tier === "basic") tierCounts.basic++;
-    else if (org.subscription_tier === "plus") tierCounts.plus++;
-    else if (org.subscription_tier === "premium") tierCounts.premium++;
+    if (org.subscriptionTier === "basic") tierCounts.basic++;
+    else if (org.subscriptionTier === "plus") tierCounts.plus++;
+    else if (org.subscriptionTier === "premium") tierCounts.premium++;
   }
 
   return {
-    total_orgs: orgs.length,
-    total_subscribed: subscribedOrgs.length,
-    tier_counts: tierCounts,
-    total_active_accounts: accounts.filter(
-      (a) => a.is_active && !a.is_deleted
+    totalOrgs: orgs.length,
+    totalSubscribed: subscribedOrgs.length,
+    tierCounts: tierCounts,
+    totalActiveAccounts: accounts.filter(
+      (a) => a.isActive && !a.isDeleted
     ).length,
-    total_archived: orgs.filter((o) => o.is_archived).length,
+    totalArchived: orgs.filter((o) => o.isArchived).length,
   };
 }
 

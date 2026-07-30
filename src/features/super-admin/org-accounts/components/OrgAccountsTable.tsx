@@ -1,6 +1,5 @@
 "use client";
 
-import { useState, useMemo } from "react";
 import {
   Table,
   TableBody,
@@ -17,15 +16,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
-import { StatusBadge } from "./StatusBadge";
+import { StatusBadge } from "@/features/super-admin/shared/components/StatusBadge";
 import { OrgAccountDetailSheet } from "./OrgAccountDetailSheet";
-import { TableSkeleton } from "./TableSkeleton";
+import { TableSkeleton } from "@/features/super-admin/shared/components/TableSkeleton";
 import type {
   SuperAdminOrgAccount,
   SuperAdminOrg,
 } from "@/features/super-admin/types";
-import { Users, Search, CheckCircle2, XCircle } from "lucide-react";
+import { Users, Search, CheckCircle2, XCircle, MoreVertical, Edit2, Eye, Archive } from "lucide-react";
 import { format } from "date-fns";
+import { useOrgAccountsTable } from "../hooks/useOrgAccountsTable";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { Button } from "@/components/ui/button";
+import { EditAccountDialog } from "./EditAccountDialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 
 interface OrgAccountsTableProps {
   accounts: SuperAdminOrgAccount[];
@@ -38,43 +42,43 @@ export function OrgAccountsTable({
   orgs,
   isLoading = false,
 }: OrgAccountsTableProps) {
-  const [activeFilter, setActiveFilter] = useState<"all" | "active" | "inactive">("all");
-  const [deletedFilter, setDeletedFilter] = useState<"all" | "not_deleted" | "deleted">("all");
-  const [search, setSearch] = useState("");
-  const [selectedAccount, setSelectedAccount] = useState<SuperAdminOrgAccount | null>(null);
-  const [sheetOpen, setSheetOpen] = useState(false);
+  const {
+    activeFilter,
+    setActiveFilter,
+    deletedFilter,
+    setDeletedFilter,
+    orgFilter,
+    setOrgFilter,
+    search,
+    setSearch,
+    selectedAccount,
+    setSelectedAccount,
+    sheetOpen,
+    setSheetOpen,
+    filtered,
+    linkedOrg,
+    handleRowClick,
+    handleEditAccount,
+    editOpen,
+    setEditOpen,
+    deleteConfirmOpen,
+    setDeleteConfirmOpen,
+    handleToggleDeleteSubmit
+  } = useOrgAccountsTable(accounts, orgs);
 
-  const orgMap = useMemo(
-    () => new Map(orgs.map((o) => [o.id, o])),
-    [orgs]
-  );
-
-  const filtered = useMemo(() => {
-    return accounts.filter((acc) => {
-      if (activeFilter === "active" && !acc.is_active) return false;
-      if (activeFilter === "inactive" && acc.is_active) return false;
-      if (deletedFilter === "not_deleted" && acc.is_deleted) return false;
-      if (deletedFilter === "deleted" && !acc.is_deleted) return false;
-      if (search.trim()) {
-        const q = search.toLowerCase();
-        return (
-          acc.full_name.toLowerCase().includes(q) ||
-          acc.email.toLowerCase().includes(q) ||
-          (acc.org_name?.toLowerCase().includes(q) ?? false)
-        );
-      }
-      return true;
-    });
-  }, [accounts, activeFilter, deletedFilter, search]);
-
-  const linkedOrg = selectedAccount
-    ? orgMap.get(selectedAccount.org_id) ?? null
-    : null;
-
-  const handleRowClick = (account: SuperAdminOrgAccount) => {
-    setSelectedAccount(account);
-    setSheetOpen(true);
-  };
+  const onTriggerEdit = (account: SuperAdminOrgAccount | null) => {
+    if (account) {
+      setSelectedAccount(account);
+      setEditOpen(true);
+    }
+  }
+  
+  const onToggleDeleteConfirm = (account: SuperAdminOrgAccount | null) => {
+    if (account) {
+      setSelectedAccount(account);
+      setDeleteConfirmOpen(true);
+    }
+   }
 
   return (
     <>
@@ -117,10 +121,40 @@ export function OrgAccountsTable({
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All</SelectItem>
-            <SelectItem value="not_deleted">Not Deleted</SelectItem>
+            <SelectItem value="notDeleted">Not Deleted</SelectItem>
             <SelectItem value="deleted">Deleted Only</SelectItem>
           </SelectContent>
         </Select>
+
+        <Select
+          value={orgFilter}
+          onValueChange={(v) =>
+            setOrgFilter(v as typeof orgFilter)
+          }
+        >
+          <SelectTrigger className="w-[160px] h-9 text-sm border-blue-100">
+            <SelectValue placeholder="All Organizations" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All Organizations</SelectItem>
+            {orgs.map((org) => (
+              <SelectItem key={org.id} value={org.id}>
+                {org.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        { (orgFilter != "all" || deletedFilter != "all" || activeFilter != "all" || search != "") && (
+          <Button variant={"ghost"} size={"sm"} onClick={() => {
+            setOrgFilter("all");
+            setDeletedFilter("all");
+            setActiveFilter("all");
+            setSearch("");
+          }}>
+            Clear Filters
+          </Button>
+        )}
 
         <span className="text-xs text-slate-400 ml-auto whitespace-nowrap">
           {filtered.length} result{filtered.length !== 1 ? "s" : ""}
@@ -144,11 +178,11 @@ export function OrgAccountsTable({
               <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3">
                 Active
               </TableHead>
-              <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3 hidden sm:table-cell">
-                Deleted
-              </TableHead>
               <TableHead className="text-xs font-semibold text-slate-500 uppercase tracking-wider py-3 hidden lg:table-cell">
                 Created At
+              </TableHead>
+              <TableHead className="text-xs font-semibold text-slate-500 uppercase hidden sm:table-cell">
+                Action
               </TableHead>
             </TableRow>
           </TableHeader>
@@ -183,11 +217,11 @@ export function OrgAccountsTable({
                     <div className="flex items-center gap-2">
                       <div className="h-7 w-7 rounded-full bg-blue-50 flex items-center justify-center shrink-0">
                         <span className="text-xs font-semibold text-blue-600">
-                          {account.full_name.charAt(0).toUpperCase()}
+                          {account.firstName.charAt(0).toUpperCase()+account.lastName.charAt(0).toUpperCase()}
                         </span>
                       </div>
                       <span className="text-sm font-medium text-slate-800 truncate max-w-[160px]">
-                        {account.full_name}
+                        {account.firstName+" "+account.lastName}
                       </span>
                     </div>
                   </TableCell>
@@ -198,13 +232,13 @@ export function OrgAccountsTable({
                   </TableCell>
                   <TableCell className="py-3 hidden md:table-cell">
                     <span className="text-sm text-slate-600 truncate max-w-[160px] block">
-                      {account.org_name ?? (
+                      {account.orgName ?? (
                         <span className="text-slate-300">—</span>
                       )}
                     </span>
                   </TableCell>
                   <TableCell className="py-3">
-                    {account.is_active ? (
+                    {account.isActive ? (
                       <span className="flex items-center gap-1 text-emerald-600 text-xs font-medium">
                         <CheckCircle2 className="h-3.5 w-3.5" />
                         <span className="hidden sm:inline">Active</span>
@@ -216,20 +250,38 @@ export function OrgAccountsTable({
                       </span>
                     )}
                   </TableCell>
-                  <TableCell className="py-3 hidden sm:table-cell">
-                    {account.is_deleted ? (
-                      <StatusBadge variant="deleted" />
-                    ) : (
-                      <span className="text-xs text-slate-300">—</span>
-                    )}
-                  </TableCell>
                   <TableCell className="py-3 hidden lg:table-cell">
                     <span className="text-xs text-slate-400">
-                      {account.created_at
-                        ? format(new Date(account.created_at), "MMM d, yyyy")
+                      {account.createdAt
+                        ? format(new Date(account.createdAt), "MMM d, yyyy")
                         : "—"}
                     </span>
                   </TableCell>
+                  <TableCell className="py-3 pr-4 text-center" onClick={(e) => e.stopPropagation()}>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-7 w-7 text-slate-400 hover:text-slate-700">
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="bg-white border border-slate-100 text-xs">
+                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => handleRowClick(account)} className="flex items-center gap-2">
+                        <Eye className="h-3.5 w-3.5 text-slate-400" /> View Account
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => onTriggerEdit(account)} className="flex items-center gap-2">
+                        <Edit2 className="h-3.5 w-3.5 text-slate-400" /> Edit Account
+                      </DropdownMenuItem>
+                      <DropdownMenuItem
+                        onClick={() => onToggleDeleteConfirm(account)}
+                        className="flex items-center gap-2 text-amber-600 focus:text-amber-700"
+                      >
+                          <Archive className="h-3.5 w-3.5 text-amber-400" /> {account.isDeleted ? "Reactivate Account" : "Delete Account"}
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -244,6 +296,37 @@ export function OrgAccountsTable({
         open={sheetOpen}
         onOpenChange={setSheetOpen}
       />
+
+      <EditAccountDialog
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        account={selectedAccount}
+        onSave={handleEditAccount}
+      />
+
+      <AlertDialog open={deleteConfirmOpen} onOpenChange={setDeleteConfirmOpen}>
+        <AlertDialogContent className="bg-white border border-slate-100 rounded-lg">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
+              <Archive className="h-5 w-5 text-amber-500" /> Confirm Action
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-xs text-slate-500">
+              Are you sure you want to {selectedAccount?.isDeleted ? "reactivate" : "delete"} the account{" "}
+              <span className="font-bold text-slate-700">"{selectedAccount?.fullName}"</span>?
+              {!selectedAccount?.isDeleted && " Deleting will hide the organization from the system."}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="gap-2">
+            <AlertDialogCancel className="border-slate-200 text-slate-600 text-xs h-9">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleToggleDeleteSubmit}
+              className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-9"
+            >
+              Continue
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
