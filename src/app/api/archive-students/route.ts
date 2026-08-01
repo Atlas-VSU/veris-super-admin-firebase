@@ -128,19 +128,31 @@ async function inspectUsers(studentIds: string[]): Promise<{
   // getAll() has no documented size cap but we chunk at 500 for safety
   const CHUNK = 500;
   for (let i = 0; i < studentIds.length; i += CHUNK) {
-    const chunk   = studentIds.slice(i, i + CHUNK);
-    const docRefs = chunk.map((id) => adminDb.collection("users").doc(id));
-    const snaps   = await adminDb.getAll(...docRefs);
+    const chunk = studentIds.slice(i, i + CHUNK);
 
-    for (const snap of snaps) {
-      if (!snap.exists) {
-        missing.push(snap.id);
-      } else if (snap.data()?.isDeleted === true) {
-        alreadyArchived.push(snap.id);
-      } else {
-        toArchive.push(snap.id);
+    const queries = chunk.map((studentId) =>
+      adminDb.collection("users").where("studentId", "==", studentId).get()
+    );
+
+    const snaps = await Promise.all(queries);
+
+    snaps.forEach((snap, index) => {
+      const studentId = chunk[index];
+
+      if (snap.empty) {
+        missing.push(studentId);
+        return;
       }
-    }
+
+      const userDoc = snap.docs[0];
+      const data = userDoc.data();
+
+      if (data.isDeleted === true) {
+        alreadyArchived.push(userDoc.id);
+      } else {
+        toArchive.push(userDoc.id);
+      }
+    });
   }
 
   return { toArchive, alreadyArchived, missing };
