@@ -12,6 +12,7 @@ import {
   PanelLeftOpen,
   ShieldCheck,
   Menu,
+  Archive,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -41,6 +42,7 @@ const navItems: NavItem[] = [
   { label: "Organizations", href: "/super-admin/organizations", icon: Building2 },
   { label: "Terms Management", href: "/super-admin/terms", icon: Calendar },
   { label: "Org Accounts", href: "/super-admin/org-accounts", icon: Users },
+  { label: "Archive Students", href: "/super-admin/archive-students", icon: Archive },
 ];
 
 interface SuperAdminSidebarProps {
