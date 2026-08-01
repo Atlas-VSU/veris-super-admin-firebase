@@ -48,8 +48,8 @@ export default function ArchiveStudentsPage() {
           <h1 className="text-xl font-bold text-slate-800">Archive Student Records</h1>
         </div>
         <p className="text-sm text-slate-500">
-          Maintenance tool to archive graduated students and permanently remove erroneous
-          Fees, Fines, and Clearance Status records for the active Academic Year and Semester.
+          End-of-semester tool to revoke system access for students who are no longer enrolled the current semester.
+          Archived students will be soft-deleted and will not be able to access the VERIS system.
         </p>
       </div>
 

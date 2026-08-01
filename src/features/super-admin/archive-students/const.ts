@@ -1,8 +1,8 @@
-import { CheckCircle2, Upload, Eye, Zap, ClipboardList } from "lucide-react";
+import { CheckCircle2, Upload, Eye, Zap, ClipboardList, ListChecks } from "lucide-react";
 
 export const STEPS = [
   { key: "upload",   label: "Upload",   icon: Upload },
-  { key: "validate", label: "Validate", icon: CheckCircle2 },
+  { key: "validate", label: "Validate", icon: ListChecks },
   { key: "preview",  label: "Preview",  icon: Eye },
   { key: "execute",  label: "Execute",  icon: Zap },
   { key: "complete", label: "Complete", icon: ClipboardList },

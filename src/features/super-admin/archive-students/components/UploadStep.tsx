@@ -1,4 +1,4 @@
-import { Info, Upload } from "lucide-react";
+import { AlertTriangle, Info, Upload } from "lucide-react";
 import { useRef } from "react";
 
 export default function UploadStep({ onFile }: { onFile: (file: File) => void }) {
@@ -20,8 +20,18 @@ export default function UploadStep({ onFile }: { onFile: (file: File) => void })
       <div>
         <h2 className="text-base font-semibold text-slate-800 mb-1">Upload Student IDs</h2>
         <p className="text-sm text-slate-500">
-          Upload a CSV or XLSX file containing a list of graduated student IDs that were
-          mistakenly included in the active semester generation.
+          Upload a CSV or XLSX file containing the student IDs to archive. These students
+          will be marked as inactive and will no longer be able to access the VERIS system.
+        </p>
+      </div>
+
+      {/* Destructive action warning */}
+      <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-700">
+        <AlertTriangle className="size-3.5 shrink-0 mt-0.5" />
+        <p>
+          <strong>This operation revokes system access.</strong> Archived student accounts will be
+          soft-deleted and their fee, fine, and clearance records for the current semester will be
+          permanently removed. Review carefully before confirming.
         </p>
       </div>
 
