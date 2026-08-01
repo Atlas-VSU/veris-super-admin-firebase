@@ -16,108 +16,11 @@
 
 import { useState, useCallback } from "react";
 import { toast } from "sonner";
-import * as XLSX from "xlsx";
+import { ArchiveStep, ParsedStudent, ValidationSummary, DryRunPreview, ExecutionLog } from "../types";
+import { parseFile } from "../utils/parseFile";
+import { validateId } from "../utils/validateId";
+import { normaliseId } from "../utils/normaliseId";
 
-// ── Types ─────────────────────────────────────────────────────────────────────
-
-export type ArchiveStep =
-  | "upload"
-  | "validate"
-  | "preview"
-  | "confirm"
-  | "execute"
-  | "complete";
-
-export interface ParsedStudent {
-  raw:     string;
-  valid:   boolean;
-  reason?: string;
-}
-
-export interface ValidationSummary {
-  total:      number;
-  valid:      number;
-  duplicates: number;
-  invalid:    number;
-  validIds:   string[];
-  rows:       ParsedStudent[];
-}
-
-export interface ActiveTerm {
-  id:       string;
-  AY:       string;
-  semester: string;
-}
-
-export interface DryRunPreview {
-  activeTerm:           ActiveTerm;
-  studentsUploaded:     number;
-  usersToArchive:       number;
-  usersAlreadyArchived: number;
-  missingUserRecords:   number;
-  missingUserIds:       string[];
-  matchingFees:         number;
-  matchingFines:        number;
-  matchingClearance:    number;
-}
-
-export interface ExecutionLog {
-  activeTerm:           ActiveTerm;
-  studentsUploaded:     number;
-  usersArchived:        number;
-  usersAlreadyArchived: number;
-  missingUserRecords:   number;
-  missingUserIds:       string[];
-  feesDeleted:          number;
-  finesDeleted:         number;
-  clearanceDeleted:     number;
-  completedAt:          string;
-}
-
-// ── Student ID Validation ─────────────────────────────────────────────────────
-// Accepts both the formatted "YY-S-NNNNN" pattern and raw 8-digit strings.
-const STUDENT_ID_RE = /^\d{2}-\d{1}-\d{5}$/;
-
-function validateId(raw: string): { valid: boolean; reason?: string } {
-  const trimmed = raw.trim();
-  if (!trimmed) return { valid: false, reason: "Empty row" };
-  if (STUDENT_ID_RE.test(trimmed)) return { valid: true };
-  // Allow raw 8-digit numbers — format them
-  const digits = trimmed.replace(/\D/g, "");
-  if (digits.length === 8) return { valid: true };
-  return { valid: false, reason: `Invalid format: "${trimmed}"` };
-}
-
-function normaliseId(raw: string): string {
-  const digits = raw.trim().replace(/\D/g, "");
-  if (digits.length === 8) {
-    return `${digits.slice(0, 2)}-${digits[2]}-${digits.slice(3)}`;
-  }
-  return raw.trim();
-}
-
-// ── File Parsing ──────────────────────────────────────────────────────────────
-
-async function parseFile(file: File): Promise<string[]> {
-  const ext = file.name.split(".").pop()?.toLowerCase();
-
-  if (ext === "csv") {
-    const text  = await file.text();
-    const lines = text.split(/\r?\n/);
-    // Flatten comma-separated cells
-    return lines.flatMap((line) => line.split(",")).map((s) => s.trim());
-  }
-
-  if (ext === "xlsx" || ext === "xls") {
-    const buffer   = await file.arrayBuffer();
-    const workbook = XLSX.read(buffer, { type: "array" });
-    const sheet    = workbook.Sheets[workbook.SheetNames[0]];
-    const rows: any[][] = XLSX.utils.sheet_to_json(sheet, { header: 1 });
-    return rows.flatMap((row) => row.map((cell) => String(cell ?? "").trim()));
-  }
-
-  throw new Error("Unsupported file type. Please upload a .csv or .xlsx file.");
-}
 
 // ── Hook ──────────────────────────────────────────────────────────────────────
 
