@@ -8,6 +8,7 @@ import {
   Users,
   Calendar,
   LogOut,
+  Archive,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
@@ -22,6 +23,7 @@ const mobileIconMap = {
   "users": Users,
   "calendar": Calendar,
   "logout": LogOut,
+  "archive": Archive,
 };
 
 // Super Admin navigation data
@@ -46,6 +48,11 @@ const superAdminData = {
       label: "Accounts",
       icon: "users",
       href: "/super-admin/org-accounts",
+    },
+    {
+      label: "Archive",
+      icon: "archive",
+      href: "/super-admin/archive-students",
     },
     {
       label: "Logout",
