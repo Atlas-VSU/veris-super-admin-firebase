@@ -164,7 +164,9 @@ function useImageUploadState() {
   const [removed, setRemoved] = useState(false);
   const [changed, setChanged] = useState(false);
   const newPreviewRef = useRef<string | null>(null);
-  newPreviewRef.current = newPreview;
+  useEffect(() => {
+    newPreviewRef.current = newPreview;
+  }, [newPreview]);
 
   // Revoke any outstanding object URL when this field unmounts
   useEffect(() => {

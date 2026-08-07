@@ -2,66 +2,13 @@
 
 import { SuperAdminSidebar } from "@/features/super-admin/shared/components/SuperAdminSidebar";
 import { MobileBottomNav } from "@/components/nav-bar/MobileBottomNav";
-import {
-  LayoutDashboard,
-  Building2,
-  Users,
-  Calendar,
-  LogOut,
-  Archive,
-} from "lucide-react";
+import { mobileIconMap } from "@/features/super-admin/types";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useRouter } from "next/navigation";
 import { LoadingScreen } from "@/components/ui/loading-screen";
 import { cacheUtils } from "@/utils/cacheUtils";
-
-// Mobile icon map
-const mobileIconMap = {
-  "layout-dashboard": LayoutDashboard,
-  "building-2": Building2,
-  "users": Users,
-  "calendar": Calendar,
-  "logout": LogOut,
-  "archive": Archive,
-};
-
-// Super Admin navigation data
-const superAdminData = {
-  mobileNavLinks: [
-    {
-      label: "Dashboard",
-      icon: "layout-dashboard",
-      href: "/super-admin/dashboard",
-    },
-    {
-      label: "Organizations",
-      icon: "building-2",
-      href: "/super-admin/organizations",
-    },
-    {
-      label: "Terms",
-      icon: "calendar",
-      href: "/super-admin/terms",
-    },
-    {
-      label: "Accounts",
-      icon: "users",
-      href: "/super-admin/org-accounts",
-    },
-    {
-      label: "Archive",
-      icon: "archive",
-      href: "/super-admin/archive-students",
-    },
-    {
-      label: "Logout",
-      icon: "logout",
-      href: "/",
-      action: "signout",
-    },
-  ],
-};
+import { superAdminData } from "@/features/super-admin/types";
 
 export default function SuperAdminLayout({
   children,
@@ -128,10 +75,8 @@ export default function SuperAdminLayout({
         className="z-50"
       />
       <div className="flex-1 flex flex-col min-w-0">
-        <main className="flex-1 md:mt-14 xl:mt-0">
-          <div className="mx-auto max-w-7xl pb-20 xl:pb-10 pt-8 px-5 sm:px-6 xl:px-8 xl:pt-10 animate-page-enter">
-            {children}
-          </div>
+        <main className="flex-1 md:mt-14 xl:mt-0 pb-20 xl:pb-10 bg-slate-50 relative">
+          {children}
         </main>
         <MobileBottomNav
           links={superAdminData.mobileNavLinks}

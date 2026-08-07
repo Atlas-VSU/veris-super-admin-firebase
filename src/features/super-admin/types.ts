@@ -1,6 +1,13 @@
 // Super Admin Types 
 // All data shapes are read-only mirrors of Firestore documents.
-
+import {
+  LayoutDashboard,
+  Building2,
+  Users,
+  Calendar,
+  LogOut,
+  Archive,
+} from "lucide-react";
 export type OrgLevel = "department" | "faculty" | "council";
 export type SubscriptionTier = "basic" | "plus" | "premium";
 
@@ -109,4 +116,61 @@ export interface SuperAdminPageData {
   orgs: SuperAdminOrg[];
   accounts: SuperAdminOrgAccount[];
   stats: DashboardStats;
+}
+
+export const superAdminData = {
+  mobileNavLinks: [
+    {
+      label: "Dashboard",
+      icon: "layout-dashboard",
+      href: "/super-admin/dashboard",
+    },
+    {
+      label: "Organizations",
+      icon: "building-2",
+      href: "/super-admin/organizations",
+    },
+    {
+      label: "Terms",
+      icon: "calendar",
+      href: "/super-admin/terms",
+    },
+    {
+      label: "Accounts",
+      icon: "users",
+      href: "/super-admin/org-accounts",
+    },
+    {
+      label: "Archive",
+      icon: "archive",
+      href: "/super-admin/archive-students",
+    },
+    {
+      label: "Logout",
+      icon: "logout",
+      href: "/",
+      action: "signout",
+    },
+  ],
+};
+
+// Mobile icon map
+export const mobileIconMap = {
+  "layout-dashboard": LayoutDashboard,
+  "building-2": Building2,
+  "users": Users,
+  "calendar": Calendar,
+  "logout": LogOut,
+  "archive": Archive,
+};
+
+export interface PageHeaderProps {
+  title: string;
+  description?: string;
+  children?: React.ReactNode;
+}
+
+export interface SuperAdminOrgAccountsPageProps {
+  accounts: SuperAdminOrgAccount[];
+  orgs: SuperAdminOrg[];
 }

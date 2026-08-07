@@ -18,6 +18,7 @@ import { useSuperAdminTerms } from "../hooks/useSuperAdminTerms";
 import useSuperAdminActions from "../hooks/useSuperAdminActions";
 import { Term } from "@/constants/types";
 import { CreateNewTermDialog } from "./CreateNewTermDialog";
+import { PageHeader } from "@/features/super-admin/shared/components/PageHeader";
 
 export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] }) {
   const {
@@ -69,113 +70,109 @@ export default function SuperAdminTermsPage({ orgs }: { orgs: SuperAdminOrg[] })
   }
 
   return (
-    <div className="space-y-6 animate-page-enter">
+    <div className="animate-page-enter flex flex-col">
       {/* HEADER SECTION */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2 mb-1">
-            <Calendar className="h-5 w-5 text-blue-600" />
-            <h1 className="text-xl font-bold text-slate-800">Terms & Subscriptions</h1>
-          </div>
-          <p className="text-sm text-slate-500">
-            Manage organization subscription tiers and renewal processes independently for each academic term.
-          </p>
-        </div>
-        <div className="flex justify-end gap-2">
-          <Button
-            onClick={() => setSetActiveTermOpen(true)}
-            className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm flex items-center gap-2"
-          >
-            <Calendar className="h-4 w-4" /> Set New Active Term
-          </Button>
-          <Button
-            onClick={() => setAddTermOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Add a New Term
-          </Button>
-        </div>
+      <PageHeader
+        title="TERMS AND SUBSCRIPTIONS"
+        description="Manage organization subscription tiers and renewal processes independently for each academic term."
+      >
+        <Button
+          onClick={() => setSetActiveTermOpen(true)}
+          variant="default"
+          className="flex items-center gap-2"
+        >
+          <Calendar className="h-4 w-4" /> Set New Active Term
+        </Button>
+        <Button
+          onClick={() => setAddTermOpen(true)}
+          variant="success"
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" /> Add a New Term
+        </Button>
+      </PageHeader>
+
+      <div className="mx-auto max-w-7xl w-full px-5 sm:px-6 xl:px-8 py-8 space-y-6">
+        {/* OVERVIEW STATS ROW */}
+        <TermStatsCards
+          totalSubscribed={termStats.totalSubscribed}
+          totalOrgs={orgs.length}
+          needsRenewalCount={termStats.needsRenewalCount}
+          expiringCount={termStats.expiringCount}
+          expiredCount={termStats.expiredCount}
+          totalRevenue={termStats.totalRevenue}
+          selectedTerm={selectedTerm}
+        />
+
+        {/* SEARCH AND FILTERS */}
+        <TermFilterCard
+          terms={terms}
+          selectedTermId={selectedTermId}
+          setSelectedTermId={setSelectedTermId}
+          selectedTerm={selectedTerm}
+          searchQuery={searchQuery}
+          setSearchQuery={setSearchQuery}
+          tierFilter={tierFilter}
+          setTierFilter={setTierFilter}
+          statusFilter={statusFilter}
+          setStatusFilter={setStatusFilter}
+          filteredCount={filteredOrgs.length}
+        />
+
+        {/* SUBSCRIPTIONS TABLE */}
+        <OrgSubscriptionsTable
+          filteredOrgs={filteredOrgs}
+          selectedTerm={selectedTerm}
+          onOpenChangeTier={handleOpenChangeTier}
+          onOpenRenew={handleOpenRenew}
+          onOpenHistory={handleOpenHistory}
+        />
+
+        {/* --- MODAL DIALOGS --- */}
+
+        {/* SET ACTIVE TERM DIALOG */}
+        <SetActiveTermDialog
+          open={setActiveTermOpen}
+          onOpenChange={setSetActiveTermOpen}
+          onSubmit={handleCreateTerm}
+          terms={terms}
+        />
+
+        <CreateNewTermDialog
+          open={addTermOpen}
+          onOpenChange={setAddTermOpen}
+          onSubmit={handleAddNewTerm}
+          existingTerms={terms}
+        />
+
+        {/* RENEW SUBSCRIPTION DIALOG */}
+        <RenewSubscriptionDialog
+          open={renewOpen}
+          onOpenChange={setRenewOpen}
+          org={selectedOrg}
+          selectedTerm={selectedTerm}
+          currentSub={activeSubForSelected}
+          onRenew={handleRenew}
+        />
+
+        {/* CHANGE TIER DIALOG */}
+        <ChangeTierDialog
+          open={changeTierOpen}
+          onOpenChange={setChangeTierOpen}
+          org={selectedOrg}
+          currentSub={activeSubForSelected}
+          onChangeTier={handleChangeTier}
+          isNew={activeSubForSelected?.subscriptionStatus == "inactive"}
+        />
+
+        {/* SUBSCRIPTION HISTORY DRAWERS SHEET */}
+        <SubscriptionHistorySheet
+          open={historyOpen}
+          onOpenChange={setHistoryOpen}
+          org={selectedOrg}
+          historyList={orgSubscriptionHistory}
+        />
       </div>
-
-      {/* OVERVIEW STATS ROW */}
-      <TermStatsCards
-        totalSubscribed={termStats.totalSubscribed}
-        totalOrgs={orgs.length}
-        needsRenewalCount={termStats.needsRenewalCount}
-        expiringCount={termStats.expiringCount}
-        expiredCount={termStats.expiredCount}
-        totalRevenue={termStats.totalRevenue}
-        selectedTerm={selectedTerm}
-      />
-
-      {/* SEARCH AND FILTERS */}
-      <TermFilterCard
-        terms={terms}
-        selectedTermId={selectedTermId}
-        setSelectedTermId={setSelectedTermId}
-        selectedTerm={selectedTerm}
-        searchQuery={searchQuery}
-        setSearchQuery={setSearchQuery}
-        tierFilter={tierFilter}
-        setTierFilter={setTierFilter}
-        statusFilter={statusFilter}
-        setStatusFilter={setStatusFilter}
-        filteredCount={filteredOrgs.length}
-      />
-
-      {/* SUBSCRIPTIONS TABLE */}
-      <OrgSubscriptionsTable
-        filteredOrgs={filteredOrgs}
-        selectedTerm={selectedTerm}
-        onOpenChangeTier={handleOpenChangeTier}
-        onOpenRenew={handleOpenRenew}
-        onOpenHistory={handleOpenHistory}
-      />
-
-      {/* --- MODAL DIALOGS --- */}
-
-      {/* SET ACTIVE TERM DIALOG */}
-      <SetActiveTermDialog
-        open={setActiveTermOpen}
-        onOpenChange={setSetActiveTermOpen}
-        onSubmit={handleCreateTerm}
-        terms={terms}
-      />
-
-      <CreateNewTermDialog
-        open={addTermOpen}
-        onOpenChange={setAddTermOpen}
-        onSubmit={handleAddNewTerm}
-        existingTerms={terms}
-      />
-
-      {/* RENEW SUBSCRIPTION DIALOG */}
-      <RenewSubscriptionDialog
-        open={renewOpen}
-        onOpenChange={setRenewOpen}
-        org={selectedOrg}
-        selectedTerm={selectedTerm}
-        currentSub={activeSubForSelected}
-        onRenew={handleRenew}
-      />
-
-      {/* CHANGE TIER DIALOG */}
-      <ChangeTierDialog
-        open={changeTierOpen}
-        onOpenChange={setChangeTierOpen}
-        org={selectedOrg}
-        currentSub={activeSubForSelected}
-        onChangeTier={handleChangeTier}
-        isNew={activeSubForSelected?.subscriptionStatus == "inactive"}
-      />
-
-      {/* SUBSCRIPTION HISTORY DRAWERS SHEET */}
-      <SubscriptionHistorySheet
-        open={historyOpen}
-        onOpenChange={setHistoryOpen}
-        org={selectedOrg}
-        historyList={orgSubscriptionHistory}
-      />
     </div>
   );
 }
