@@ -13,17 +13,17 @@ const buttonVariants = cva(
       variant: {
         // Brand cobalt-blue CTA (design "accent")
         default:
-          "bg-primary text-primary-foreground border border-primary hover:bg-[color-mix(in_oklch,var(--primary),black_8%)]",
+          "bg-gradient-to-r from-[#030677] to-[#2563eb] text-white border-0 hover:opacity-90 shadow-sm",
         // Near-black ink action (design "primary")
         ink: "bg-foreground text-background border border-foreground hover:bg-[color-mix(in_oklch,var(--foreground),white_14%)]",
         destructive:
-          "bg-transparent text-destructive border border-rule-strong hover:bg-[color-mix(in_oklch,var(--destructive),transparent_92%)] hover:border-destructive focus-visible:ring-destructive/30",
+          "bg-gradient-to-r from-red-600 to-red-300 text-white border-0 hover:opacity-90 shadow-sm focus-visible:ring-destructive/30",
         outline:
           "border border-rule-strong bg-transparent text-foreground hover:bg-secondary",
         secondary:
           "bg-secondary text-secondary-foreground border border-rule hover:bg-[color-mix(in_oklch,var(--secondary),black_5%)]",
         success:
-          "bg-primary text-primary-foreground border border-primary hover:bg-[color-mix(in_oklch,var(--primary),black_8%)]",
+          "bg-gradient-to-r from-green-600 to-green-300 text-white border-0 hover:opacity-90 shadow-sm",
         ghost:
           "border border-transparent text-foreground hover:bg-secondary hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline hover:text-[color-mix(in_oklch,var(--primary),black_10%)]",
