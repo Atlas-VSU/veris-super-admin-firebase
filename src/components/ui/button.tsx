@@ -13,7 +13,7 @@ const buttonVariants = cva(
       variant: {
         // Brand cobalt-blue CTA (design "accent")
         default:
-          "bg-gradient-to-r from-[#030677] to-[#2563eb] text-white border-0 hover:opacity-90 shadow-sm",
+          "bg-gradient-to-r from-[#1d4ed8] to-[#60a5fa] text-white border-0 hover:opacity-90 shadow-sm",
         // Near-black ink action (design "primary")
         ink: "bg-foreground text-background border border-foreground hover:bg-[color-mix(in_oklch,var(--foreground),white_14%)]",
         destructive:

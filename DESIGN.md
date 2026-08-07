@@ -12,7 +12,8 @@ The platform utilizes a distinct, bold gradient as its primary brand identity. T
 ### Usage:
 *   **Page Titles:** All major page headers (`<h1>`) must use this gradient as a text fill.
     *   *Implementation:* `bg-gradient-to-r from-[#030677] to-[#2563eb] bg-clip-text text-transparent`
-*   **Primary Actions (e.g., Main Buttons):** Should integrate this gradient, replacing flat blue colors where high emphasis is required.
+*   **Primary Actions (e.g., Main Buttons):** To prevent the dark primary gradient from being visually overwhelming when used as a solid block on buttons, use a slightly lighter, softened blue gradient variant.
+    *   *Implementation:* `bg-gradient-to-r from-[#1d4ed8] to-[#60a5fa]` (Tailwind `blue-700` to `blue-400`)
 
 ## 2. Action Colors (The "White Blend" Rule)
 
