@@ -170,7 +170,7 @@ export interface PageHeaderProps {
   children?: React.ReactNode;
 }
 
-interface SuperAdminOrgAccountsPageProps {
+export interface SuperAdminOrgAccountsPageProps {
   accounts: SuperAdminOrgAccount[];
   orgs: SuperAdminOrg[];
 }
