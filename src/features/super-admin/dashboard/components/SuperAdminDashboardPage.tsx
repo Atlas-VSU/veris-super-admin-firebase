@@ -1,28 +1,22 @@
 import { fetchSuperAdminData } from "@/firebase/super-admin";
 import { DashboardOverview } from "@/features/super-admin/dashboard/components/DashboardOverview";
 import { ShieldCheck } from "lucide-react";
+import { PageHeader } from "@/features/super-admin/shared/components/PageHeader";
 
 export default async function SuperAdminDashboardPage() {
   const { stats } = await fetchSuperAdminData();
 
   return (
-    <div className="space-y-8 animate-page-enter">
-      {/* Page header */}
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <ShieldCheck className="h-5 w-5 text-blue-600" />
-          <h1 className="text-xl font-bold text-slate-800">
-            Platform Overview
-          </h1>
-        </div>
-        <p className="text-sm text-slate-500">
-          Read-only view of all subscribing organizations and their accounts on
-          VERIS (VERIS).
-        </p>
-      </div>
+    <div className="animate-page-enter flex flex-col">
+      <PageHeader
+        title="PLATFORM OVERVIEW"
+        description="Read-only view of all subscribing organizations and their accounts on VERIS (VERIS)."
+      />
 
-      {/* Stats */}
-      <DashboardOverview stats={stats} />
+      <div className="mx-auto max-w-7xl w-full px-5 sm:px-6 xl:px-8 py-8 space-y-8">
+        {/* Stats */}
+        <DashboardOverview stats={stats} />
+      </div>
     </div>
   );
 }

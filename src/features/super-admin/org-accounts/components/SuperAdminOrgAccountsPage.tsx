@@ -4,13 +4,11 @@ import { OrgAccountsTable } from "@/features/super-admin/org-accounts/components
 import { CreateOrgAccountDialog } from "@/features/super-admin/org-accounts/components/CreateOrgAccountDialog";
 import { Plus, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PageHeader } from "@/features/super-admin/shared/components/PageHeader";
 import { useOrgAccounts } from "../hooks/useOrgAccounts";
-import type { SuperAdminOrgAccount, SuperAdminOrg } from "@/features/super-admin/types";
+import type { SuperAdminOrgAccountsPageProps } from "@/features/super-admin/types";
 
-interface SuperAdminOrgAccountsPageProps {
-  accounts: SuperAdminOrgAccount[];
-  orgs: SuperAdminOrg[];
-}
+
 
 /**
  * Client-side page shell for the Org Accounts section.
@@ -39,29 +37,24 @@ export default function SuperAdminOrgAccountsPage({
   ];
 
   return (
-    <div className="space-y-6 animate-page-enter">
-      {/* Page header */}
-      <div>
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2 mb-1">
-            <Users className="h-5 w-5 text-blue-600" />
-            <h1 className="text-xl font-bold text-slate-800">Org Accounts</h1>
-          </div>
-          <Button
-            onClick={() => setAddOrgAccountOpen(true)}
-            className="bg-green-600 hover:bg-green-700 text-white shadow-sm flex items-center gap-2"
-          >
-            <Plus className="h-4 w-4" /> Add Org Account
-          </Button>
-        </div>
-        <p className="text-sm text-slate-500">
-          All organization admin accounts linked to subscribing organizations.
-          Click a row to view full details.
-        </p>
-      </div>
+    <div className="animate-page-enter flex flex-col">
+      <PageHeader
+        title="ORGANIZATION ACCOUNTS"
+        description="All organization admin accounts linked to subscribing organizations. Click a row to view full details."
+      >
+        <Button
+          onClick={() => setAddOrgAccountOpen(true)}
+          variant="success"
+          className="flex items-center gap-2"
+        >
+          <Plus className="h-4 w-4" /> Add Org Account
+        </Button>
+      </PageHeader>
 
-      {/* Table */}
-      <OrgAccountsTable accounts={mergedAccounts} orgs={orgs} />
+      <div className="mx-auto max-w-7xl w-full px-5 sm:px-6 xl:px-8 py-8 space-y-6">
+        {/* Table */}
+        <OrgAccountsTable accounts={mergedAccounts} orgs={orgs} />
+      </div>
 
       {/* Create dialog */}
       <CreateOrgAccountDialog

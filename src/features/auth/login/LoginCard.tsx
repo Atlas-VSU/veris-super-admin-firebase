@@ -51,7 +51,7 @@ export function LoginCard() {
   };
 
   // Form validation function
-  const validateForm = (): boolean => {
+  function validateForm(): boolean {
     let isValid = true;
 
     // Reset field errors
