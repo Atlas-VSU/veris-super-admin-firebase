@@ -32,11 +32,8 @@ interface MobileBottomNavProps {
 }
 
 export function MobileBottomNav({ links, iconMap, onAction }: MobileBottomNavProps) {
-  const isMobile = useIsMobile();
   const pathname = usePathname();
   const [showMore, setShowMore] = React.useState(false);
-
-  if (!isMobile) return null;
 
   const moreLabels = new Set(["members", "fees", "fines", "clearance"]);
   const visibleLinks = links.filter((link) => !moreLabels.has(link.label.trim().toLowerCase()));
@@ -143,7 +140,7 @@ export function MobileBottomNav({ links, iconMap, onAction }: MobileBottomNavPro
         </>
       )}
 
-      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card py-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-lg">
+      <nav className="fixed bottom-0 left-0 right-0 z-50 border-t bg-card py-2 pb-[calc(env(safe-area-inset-bottom)+0.5rem)] shadow-lg xl:hidden">
         <div className="hidden items-center justify-around max-[420px]:flex">
           {visibleLinks.map((link) => (
             <div key={`compact-${link.label}`} className="flex-1">
