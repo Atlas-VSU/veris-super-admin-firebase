@@ -79,7 +79,7 @@ export function MobileBottomNav({ links, iconMap, onAction }: MobileBottomNavPro
     if (!Icon) return null;
     const isActive = isActiveRoute(href);
 
-    const className = `flex min-w-0 flex-col items-center transition-colors ${compact ? "px-1 py-1 text-[10px] leading-tight" : "p-1 text-xs"} ${isActive ? "rounded-md bg-primary/10 text-primary" : "text-muted-foreground hover:text-primary"}`;
+    const className = `flex min-w-0 flex-col items-center transition-all duration-200 ${compact ? "px-1 py-1.5 text-[10px] leading-tight" : "p-1.5 text-xs"} ${isActive ? "rounded-md bg-gradient-to-r from-[#1d4ed8] to-[#60a5fa] text-white shadow-md shadow-blue-500/20" : "rounded-md text-slate-500 hover:bg-blue-50 hover:text-[#2563eb]"}`;
 
     // Links with an `action` run custom logic (e.g. sign out) instead of plain navigation.
     if (action) {
@@ -152,7 +152,7 @@ export function MobileBottomNav({ links, iconMap, onAction }: MobileBottomNavPro
             <button
               type="button"
               onClick={() => setShowMore((prev) => !prev)}
-              className="flex flex-1 min-w-0 flex-col items-center px-1 py-1 text-[10px] leading-tight text-muted-foreground transition-colors hover:text-primary"
+              className="flex flex-1 min-w-0 flex-col items-center px-1 py-1.5 text-[10px] leading-tight rounded-md text-slate-500 hover:bg-blue-50 hover:text-[#2563eb] transition-all duration-200"
               aria-expanded={showMore}
               aria-label="Toggle more navigation"
             >
