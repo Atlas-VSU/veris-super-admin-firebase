@@ -53,6 +53,7 @@ export default function RootLayout({
         <NextTopLoader
           color="var(--primary)"
           shadow="0 0 10px var(--primary), 0 0 5px var(--primary)"
+          showSpinner={false}
         />
         <div suppressHydrationWarning style={{ display: "contents" }}>
           <ThemeProvider
