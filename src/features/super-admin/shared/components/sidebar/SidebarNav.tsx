@@ -35,7 +35,11 @@ export function SidebarNav({ pathname, collapsed = false, onNavigate }: SidebarN
               <span className="absolute left-0 top-1/2 -translate-y-1/2 h-5 w-0.75 rounded-full bg-blue-300" />
             )}
             <item.icon
-              className={cn("size-4 shrink-0", active && "text-white")}
+              className={cn(
+                "shrink-0",
+                collapsed ? "size-4.5" : "size-4",
+                active && "text-white"
+              )}
             />
             {!collapsed && <span>{item.label}</span>}
           </Link>

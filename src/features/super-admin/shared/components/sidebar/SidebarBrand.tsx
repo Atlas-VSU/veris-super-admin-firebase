@@ -19,8 +19,8 @@ export function SidebarBrand({ collapsed = false }: SidebarBrandProps) {
         <Image
           src="/images/veris-logo-superadmin.png"
           alt="VERIS Logo"
-          width={collapsed ? 50 : 40}
-          height={collapsed ? 50 : 40}
+          width={collapsed ? 60 : 40}
+          height={collapsed ? 60 : 40}
           className="object-contain w-full h-full"
         />
       </div>

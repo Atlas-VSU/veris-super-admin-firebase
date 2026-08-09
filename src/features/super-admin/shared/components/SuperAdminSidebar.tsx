@@ -2,7 +2,7 @@
 
 import { usePathname } from "next/navigation";
 import Image from "next/image";
-import { PanelLeftClose, PanelLeftOpen, Menu, Settings } from "lucide-react";
+import { ChevronLeft, ChevronRight, Menu, Settings } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
@@ -87,12 +87,12 @@ export function SuperAdminSidebar({ user, className }: SuperAdminSidebarProps) {
         <button
           onClick={() => setCollapsed((v) => !v)}
           aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
-          className="absolute -right-3 top-18 z-10 flex size-6 items-center justify-center rounded-full border border-blue-100 bg-white text-slate-400 shadow-sm transition-colors hover:bg-blue-50 hover:text-blue-600"
+          className="absolute -right-3 top-1/2 -translate-y-1/2 z-10 flex size-6.5 items-center justify-center rounded-full border border-blue-100 bg-white text-slate-400 shadow-sm transition-colors hover:bg-blue-50 hover:text-blue-600"
         >
           {collapsed ? (
-            <PanelLeftOpen className="size-3" />
+            <ChevronRight className="size-4.5" />
           ) : (
-            <PanelLeftClose className="size-3" />
+            <ChevronLeft className="size-4.5" />
           )}
         </button>
       </aside>
@@ -114,11 +114,11 @@ export function SuperAdminSidebar({ user, className }: SuperAdminSidebarProps) {
 
         {/* Avatar in top bar */}
         {mounted && (
-          <SidebarFooter 
-            user={user} 
-            collapsed={true} 
-            onSignOut={handleSignOut} 
-            hideSeparator={true} 
+          <SidebarFooter
+            user={user}
+            collapsed={true}
+            onSignOut={handleSignOut}
+            hideSeparator={true}
             className="w-auto border-0"
           />
         )}
