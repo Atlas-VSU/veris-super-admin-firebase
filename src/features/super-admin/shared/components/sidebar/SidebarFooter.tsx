@@ -1,3 +1,6 @@
+"use client";
+
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -12,8 +15,10 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { ChevronUp, LogOut } from "lucide-react";
 import { SidebarUser, SidebarFooterProps } from "./superadmin.types";
+import { ConfirmationDialog } from "@/components/features/shared/ConfirmationDialog";
 
 export function SidebarFooter({ user, collapsed = false, onSignOut, hideSeparator = false, className }: SidebarFooterProps) {
+  const [isSignOutDialogOpen, setIsSignOutDialogOpen] = useState(false);
   const initials = user?.name
     ? user.name
       .split(" ")
@@ -81,15 +86,30 @@ export function SidebarFooter({ user, collapsed = false, onSignOut, hideSeparato
             </DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem
-              className="text-red-600 focus:text-red-600 focus:bg-red-50 cursor-pointer"
-              onClick={onSignOut}
+              className="rounded-lg bg-gradient-to-r from-red-600 to-red-300 text-white focus:text-white cursor-pointer justify-center font-semibold shadow-sm hover:opacity-90 mt-1"
+              onSelect={(e) => {
+                e.preventDefault(); // prevent menu close if preferred, or let it close
+                setIsSignOutDialogOpen(true);
+              }}
             >
-              <LogOut className="mr-2 size-4" />
               Sign Out
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
+
+      <ConfirmationDialog
+        open={isSignOutDialogOpen}
+        onOpenChange={setIsSignOutDialogOpen}
+        title="Confirm Sign Out"
+        description="Are you sure you want to sign out of the VERIS Super Admin Console?"
+        confirmText="Sign Out"
+        variant="danger"
+        onConfirm={() => {
+          setIsSignOutDialogOpen(false);
+          if (onSignOut) onSignOut();
+        }}
+      />
     </div>
   );
 }
