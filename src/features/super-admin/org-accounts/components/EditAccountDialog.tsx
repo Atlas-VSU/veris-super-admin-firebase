@@ -1,37 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseModal } from "@/components/features/shared/BaseModal";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Edit2, RefreshCw } from "lucide-react";
-import type { SuperAdminOrgAccount } from "../../types";
-
-
-export interface EditAccountFormData {
-  name: string;
-  firstName: string;
-  lastName: string;
-  email: string;
- }
-
-interface EditAccountDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  account: SuperAdminOrgAccount | null;
-  onSave: (
-    accountId: string,
-    accountData: EditAccountFormData
-  ) => Promise<void> | void;
-}
+import type { EditAccountFormData, EditAccountDialogProps } from "../types/dialogs.types";
 
 export function EditAccountDialog({
   open,
@@ -78,23 +53,43 @@ export function EditAccountDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] bg-white border border-blue-100 rounded-lg max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Edit2 className="h-5 w-5 text-blue-600" /> Edit Account Details
-            </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
-              Modify the details for this account.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4 text-xs">
-
-
-
-            <div className="grid grid-cols-2 gap-4">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      asForm={true}
+      onSubmit={handleSubmit}
+      title="Edit Account Details"
+      description="Modify the details for this account."
+      className="sm:max-w-[480px] bg-white border border-blue-100 rounded-lg max-h-[90vh] overflow-y-auto"
+      footer={
+        <div className="flex justify-end gap-2 sm:gap-0 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-slate-200 text-slate-600 h-9 mr-2"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="h-9"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Saving...
+              </>
+            ) : (
+              "Save Changes"
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <div className="grid gap-4 py-4 text-xs">
+        <div className="grid grid-cols-2 gap-4">
               <div className="grid gap-2">
                 <Label htmlFor="edit-firstname" className="text-xs font-semibold text-slate-600 uppercase">
                   First Name
@@ -153,34 +148,7 @@ export function EditAccountDialog({
               />
             </div>
 
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="border-slate-200 text-slate-600 h-9"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Saving...
-                </>
-              ) : (
-                "Save Changes"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </BaseModal>
   );
 }

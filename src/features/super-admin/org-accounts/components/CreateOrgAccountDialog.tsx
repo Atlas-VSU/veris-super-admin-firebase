@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseModal } from "@/components/features/shared/BaseModal";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,26 +14,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { UserPlus, RefreshCw, Eye, EyeOff } from "lucide-react";
-import type { SuperAdminOrg } from "../../types";
-
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-export interface CreateOrgAccountFormData {
-  email: string;
-  tempPassword: string;
-  firstName: string;
-  lastName: string;
-  /** Display name — e.g. "President - Kyle" or auto-combined first+last */
-  name: string;
-  orgId: string;
-}
-
-interface CreateOrgAccountDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onCreate: (data: CreateOrgAccountFormData) => Promise<void> | void;
-  orgs: SuperAdminOrg[];
-}
+import type { CreateOrgAccountFormData, CreateOrgAccountDialogProps } from "../types/dialogs.types";
 
 // ─── Component ────────────────────────────────────────────────────────────────
 
@@ -58,6 +32,14 @@ export function CreateOrgAccountDialog({
   const [name, setName] = useState("");
   const [orgId, setOrgId] = useState("none");
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const isFormValid = Boolean(
+    email.trim() &&
+    tempPassword.trim().length >= 6 &&
+    firstName.trim() &&
+    lastName.trim() &&
+    orgId !== "none"
+  );
 
   // Auto-populate the display name when first/last name changes,
   // but only if the user hasn't manually edited it yet.
@@ -131,20 +113,45 @@ export function CreateOrgAccountDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[480px] bg-white border border-blue-100 rounded-lg max-h-[90vh] overflow-y-auto">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <UserPlus className="h-5 w-5 text-blue-600" /> Create Org Account
-            </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
-              Register a new organization admin account on the VERIS platform.
-              A temporary password will be issued to the account holder.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4 text-xs">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      asForm={true}
+      onSubmit={handleSubmit}
+      title="Create Org Account"
+      description="Register a new organization admin account on the VERIS platform. A temporary password will be issued to the account holder."
+      className="sm:max-w-[480px] bg-white border border-blue-100 rounded-lg max-h-[90vh] overflow-y-auto"
+      footer={
+        <div className="flex justify-end gap-2 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => {
+              resetForm();
+              onOpenChange(false);
+            }}
+            className="border-slate-200 text-slate-600 h-9"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="h-9"
+            disabled={isSubmitting || !isFormValid}
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Creating...
+              </>
+            ) : (
+              "Create Account"
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <div className="grid gap-4 py-4 text-xs">
 
             {/* ── Identity section ── */}
             <div className="grid grid-cols-2 gap-4">
@@ -303,37 +310,7 @@ export function CreateOrgAccountDialog({
                 </p>
               </div>
             </div>
-          </div>
-
-          <DialogFooter className="gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => {
-                resetForm();
-                onOpenChange(false);
-              }}
-              className="border-slate-200 text-slate-600 h-9"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Creating...
-                </>
-              ) : (
-                "Create Account"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </BaseModal>
   );
 }

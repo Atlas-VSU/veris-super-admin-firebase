@@ -6,7 +6,7 @@ import { toISOString } from "@/utils/dateUtils";
 import { initializeApp, deleteApp, getApps } from "firebase/app";
 import { getAuth, createUserWithEmailAndPassword } from "firebase/auth";
 import { initializeAppCheck, ReCaptchaV3Provider } from "firebase/app-check";
-import type { CreateOrgAccountFormData } from "@/features/super-admin/org-accounts/components/CreateOrgAccountDialog";
+import type { CreateOrgAccountFormData } from "@/features/super-admin/org-accounts/types/dialogs.types";
 
 
 const accountsCollection = collection(db, "users");
