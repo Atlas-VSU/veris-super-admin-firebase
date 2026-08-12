@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseModal } from "@/components/features/shared/BaseModal";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,22 +15,7 @@ import {
 import { CreditCard, RefreshCw } from "lucide-react";
 import type { SuperAdminOrg, SubscriptionTier, Term, OrgSubscription } from "../../types";
 import { format, addMonths } from "date-fns";
-
-interface RenewSubscriptionDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  org: SuperAdminOrg | null;
-  selectedTerm: Term | undefined;
-  currentSub: OrgSubscription | null;
-  onRenew: (
-    orgId: string,
-    tier: SubscriptionTier,
-    validUntil: string,
-    amount: number,
-    refNum: string,
-    method: string
-  ) => Promise<void> | void;
-}
+import type { RenewSubscriptionDialogProps } from "../types/dialogs.types";
 
 export function RenewSubscriptionDialog({
   open,
@@ -90,19 +68,42 @@ export function RenewSubscriptionDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] bg-white border border-blue-100 rounded-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <CreditCard className="h-5 w-5 text-blue-600" /> Renew Subscription
-            </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
-              Process billing and activate subscription status for this organization.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      asForm={true}
+      onSubmit={handleSubmit}
+      title="Renew Subscription"
+      description="Process billing and activate subscription status for this organization."
+      className="sm:max-w-[450px] bg-white border border-blue-100 rounded-lg"
+      footer={
+        <div className="flex justify-end gap-2 sm:gap-0 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-slate-200 text-slate-600 h-9 mr-2"
+            disabled={isSubmittingRenewal}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="h-9"
+            disabled={isSubmittingRenewal}
+          >
+            {isSubmittingRenewal ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Verifying...
+              </>
+            ) : (
+              "Confirm Renewal"
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <div className="grid gap-4 py-4">
             <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-1">
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">Organization</p>
               <p className="text-sm font-bold text-slate-700">{org?.name}</p>
@@ -193,34 +194,7 @@ export function RenewSubscriptionDialog({
                 required
               />
             </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="border-slate-200 text-slate-600 h-9"
-              disabled={isSubmittingRenewal}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-              disabled={isSubmittingRenewal}
-            >
-              {isSubmittingRenewal ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Verifying...
-                </>
-              ) : (
-                "Confirm Renewal"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </BaseModal>
   );
 }

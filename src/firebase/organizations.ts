@@ -2,7 +2,7 @@ import type { OrgLevel, SuperAdminOrgAccount } from "@/features/super-admin/type
 import { addDoc, collection, doc, getCountFromServer, getDocs, limit, orderBy, query, startAfter, updateDoc, where } from "firebase/firestore";
 import { db } from "./firebase.config";
 import { getOrgAccounts } from "./accounts";
-import { CreateOrgFormData } from "@/features/super-admin/organizations/components/CreateOrgDialog";
+import type { CreateOrgFormData } from "@/features/super-admin/organizations/types/dialogs.types";
 
 
 

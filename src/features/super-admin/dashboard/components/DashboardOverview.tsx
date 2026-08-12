@@ -81,7 +81,7 @@ export function DashboardOverview({
       {/* Primary stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4">
         <StatCard
-          title="Total Subscribed Orgs"
+          title="Subscribed Organizations"
           value={stats?.totalSubscribed ?? 0}
           subtitle={`Out of ${stats?.totalOrgs ?? 0} total organizations`}
           icon={Building2}
@@ -89,7 +89,7 @@ export function DashboardOverview({
           isLoading={isLoading}
         />
         <StatCard
-          title="Active Org Accounts"
+          title="Active Organizations"
           value={stats?.totalActiveAccounts ?? 0}
           subtitle="Active, non-deleted accounts"
           icon={Users}
@@ -105,7 +105,7 @@ export function DashboardOverview({
           isLoading={isLoading}
         />
         <StatCard
-          title="Total Organizations"
+          title="Organizations"
           value={stats?.totalOrgs ?? 0}
           subtitle="All registered organizations"
           icon={Layers}

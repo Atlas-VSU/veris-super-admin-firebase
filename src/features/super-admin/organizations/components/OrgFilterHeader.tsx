@@ -101,12 +101,12 @@ export function OrgFilterHeader({
       </div>
 
       {/* Sort and Create Button */}
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-3">
         <Select
           value={sortBy}
           onValueChange={(v) => setSortBy(v as typeof sortBy)}
         >
-          <SelectTrigger className="w-[160px] h-9 text-sm border-blue-100">
+          <SelectTrigger className="w-[195px] h-9 text-sm border-blue-100">
             <SelectValue placeholder="Sort by" />
           </SelectTrigger>
           <SelectContent className="bg-white border-slate-200 text-xs">
@@ -120,9 +120,9 @@ export function OrgFilterHeader({
         <Button
           onClick={onCreateClick}
           size="sm"
-          className="bg-blue-600 hover:bg-blue-700 text-white h-9 px-3 text-xs shadow-sm font-semibold flex items-center gap-1.5 shrink-0"
+          className="h-9 px-3 text-xs shadow-sm font-semibold flex items-center gap-1.5 shrink-0"
         >
-          <Plus className="h-4 w-4" /> Add Org
+          <Plus className="h-4 w-4" /> Add Organization
         </Button>
       </div>
     </div>

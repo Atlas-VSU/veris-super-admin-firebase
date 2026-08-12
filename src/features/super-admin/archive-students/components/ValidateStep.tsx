@@ -75,7 +75,7 @@ export default function ValidateStep({
         <Button
           onClick={onProceed}
           disabled={!hasValid || isLoadingPreview}
-          className="bg-blue-600 hover:bg-blue-700 text-white gap-2"
+          className="gap-2"
         >
           {isLoadingPreview ? (
             <>

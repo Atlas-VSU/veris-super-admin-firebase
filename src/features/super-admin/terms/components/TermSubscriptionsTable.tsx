@@ -205,7 +205,7 @@ export function OrgSubscriptionsTable({
                         <Button
                           size="sm"
                           onClick={() => onOpenRenew(org, sub)}
-                          className="bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs h-7 px-3 py-1 shadow-sm shrink-0"
+                          className="font-medium text-xs h-7 px-3 py-1 shadow-sm shrink-0"
                         >
                           Renew
                         </Button>
