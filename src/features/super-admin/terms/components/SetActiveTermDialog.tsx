@@ -1,14 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseModal } from "@/components/features/shared/BaseModal";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -22,13 +15,7 @@ import {
 } from "@/components/ui/select";
 import { Calendar, RefreshCw } from "lucide-react";
 import { Term } from "@/constants/types";
-
-interface SetActiveTermDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  onSubmit: (AY: string, semester: string) => Promise<void> | void;
-  terms: Term[]
-}
+import type { SetActiveTermDialogProps } from "../types/dialogs.types";
 
 export function SetActiveTermDialog({
   open,
@@ -39,6 +26,8 @@ export function SetActiveTermDialog({
   const [newAY, setNewAY] = useState(terms[0]?.AY);
   const [newSemester, setNewSemester] = useState(terms[0]?.semester);
   const [isSettingANewActiveTerm, setIsSettingANewActiveTerm] = useState(false);
+
+  const isFormValid = Boolean(newAY && newSemester);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -54,19 +43,42 @@ export function SetActiveTermDialog({
   const uniqueAYs = [...new Set(terms.map((term: Term) => term.AY))];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] bg-white border border-blue-100 rounded-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Calendar className="h-5 w-5 text-blue-600" /> Set New Active Term
-            </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
-              Set a new active term. This will deactivate the current active term.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      asForm={true}
+      onSubmit={handleSubmit}
+      title="Set New Active Term"
+      description="Set a new active term. This will deactivate the current active term."
+      className="sm:max-w-[425px] bg-white border border-blue-100 rounded-lg"
+      footer={
+        <div className="flex justify-end gap-2 sm:gap-0 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-slate-200 text-slate-600 h-9 mr-2"
+            disabled={isSettingANewActiveTerm}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="h-9"
+            disabled={isSettingANewActiveTerm || !isFormValid}
+          >
+            {isSettingANewActiveTerm ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Setting...
+              </>
+            ) : (
+              "Set as New Active Term"
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <div className="grid gap-4 py-4">
             <div className="grid gap-2">
               <Label htmlFor="academic-year" className="text-xs font-semibold text-slate-600 uppercase">
                 Academic Year
@@ -99,34 +111,7 @@ export function SetActiveTermDialog({
                 </SelectContent>
               </Select>
             </div>
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="border-slate-200 text-slate-600 h-9"
-              disabled={isSettingANewActiveTerm}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-              disabled={isSettingANewActiveTerm}
-            >
-              {isSettingANewActiveTerm ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Setting...
-                </>
-              ) : (
-                "Set as New Active Term"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </BaseModal>
   );
 }

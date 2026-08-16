@@ -235,7 +235,7 @@ export function OrgsTable({isLoading = false }: OrgsTableProps) {
             <AlertDialogCancel className="border-slate-200 text-slate-600 text-xs h-9">Cancel</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleToggleArchiveSubmit}
-              className="bg-blue-600 hover:bg-blue-700 text-white text-xs h-9"
+              className="text-xs h-9"
             >
               Continue
             </AlertDialogAction>

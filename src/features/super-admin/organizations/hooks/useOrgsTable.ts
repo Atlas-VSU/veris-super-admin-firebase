@@ -4,8 +4,9 @@ import { createOrganization, fetchOrganizationsPaginated, updateOrganization } f
 import { getFaculties } from "@/firebase/faculties";
 import { getPrograms } from "@/firebase/programs";
 import { toast } from "sonner";
-import { CreateOrgFormData } from "../components/CreateOrgDialog";
-import { EditOrgFormData } from "../components/EditOrgDialog";
+import { Organization } from "@/constants/types";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
+import type { CreateOrgFormData, EditOrgFormData } from "../types/dialogs.types";
 import { batchUpdateAccounts, getAccountsByOrgId } from "@/firebase/accounts";
 
 

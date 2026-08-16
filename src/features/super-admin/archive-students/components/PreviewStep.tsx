@@ -72,7 +72,7 @@ export default function PreviewStep({
         </Button>
         <Button
           onClick={onConfirm}
-          className="bg-red-600 hover:bg-red-700 text-white gap-2"
+          variant="destructive" className="gap-2"
         >
           <ShieldAlert className="size-4" /> Confirm Archive
         </Button>

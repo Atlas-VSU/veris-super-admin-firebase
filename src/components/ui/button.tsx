@@ -7,7 +7,7 @@ import { cn } from "@/lib/utils"
 // Generic-VERIS buttons: flat, hairline-bordered, 4px radius, weight 500,
 // slightly negative tracking, color-only transitions (no scale, no heavy shadow).
 const buttonVariants = cva(
-  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[4px] text-sm font-medium tracking-[-0.005em] leading-none transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-1 focus-visible:ring-offset-background aria-invalid:border-destructive",
+  "inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-[4px] text-sm font-medium tracking-[-0.005em] leading-none capitalize transition-colors disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg:not([class*='size-'])]:size-4 shrink-0 [&_svg]:shrink-0 outline-none focus-visible:ring-2 focus-visible:ring-ring/40 focus-visible:ring-offset-1 focus-visible:ring-offset-background aria-invalid:border-destructive",
   {
     variants: {
       variant: {
@@ -24,6 +24,8 @@ const buttonVariants = cva(
           "bg-secondary text-secondary-foreground border border-rule hover:bg-[color-mix(in_oklch,var(--secondary),black_5%)]",
         success:
           "bg-gradient-to-r from-green-600 to-green-300 text-white border-0 hover:opacity-90 shadow-sm",
+        warning:
+          "bg-gradient-to-r from-amber-500 to-amber-200 text-white border-0 hover:opacity-90 shadow-sm focus-visible:ring-amber-500/30",
         ghost:
           "border border-transparent text-foreground hover:bg-secondary hover:text-foreground",
         link: "text-primary underline-offset-4 hover:underline hover:text-[color-mix(in_oklch,var(--primary),black_10%)]",

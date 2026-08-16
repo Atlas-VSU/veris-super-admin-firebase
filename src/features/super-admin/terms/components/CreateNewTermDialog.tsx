@@ -2,14 +2,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseModal } from "@/components/features/shared/BaseModal";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -22,6 +15,7 @@ import {
 } from "@/components/ui/select";
 import { BookOpen, RefreshCw, AlertTriangle } from "lucide-react";
 import type { Term } from "../../types";
+import type { CreateNewTermDialogProps } from "../types/dialogs.types";
 
 // ── AY generation helper ──────────────────────────────────────────────────────
 const currentYear = new Date().getFullYear();
@@ -34,20 +28,6 @@ const SEMESTER_OPTIONS = [
   { value: "1st", label: "1st Semester" },
   { value: "2nd", label: "2nd Semester" },
 ];
-
-// ── Props ─────────────────────────────────────────────────────────────────────
-interface CreateNewTermDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  /**
-   * Called when the user submits the form.
-   * `setActive` indicates whether the newly created term should immediately
-   * become the active term (deactivating any currently active one).
-   */
-  onSubmit: (term: Term, setActive: boolean) => Promise<void> | void;
-  /** All existing terms — used to check for duplicates. */
-  existingTerms?: Term[];
-}
 
 // ── Component ─────────────────────────────────────────────────────────────────
 export function CreateNewTermDialog({
@@ -118,155 +98,147 @@ export function CreateNewTermDialog({
     }
   };
 
-  // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[440px] bg-white border border-blue-100 rounded-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <BookOpen className="h-5 w-5 text-blue-600" /> Create New Term
-            </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
-              Add a new academic term to the VERIS platform. You may optionally
-              set it as the current active term right away.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4 text-xs">
-            {/* ── Academic Year ─────────────────────────────────────────── */}
-            <div className="grid gap-2">
-              <Label
-                htmlFor="term-ay"
-                className="text-xs font-semibold text-slate-600 uppercase"
-              >
-                Academic Year
-              </Label>
-              <Select value={ay} onValueChange={setAy}>
-                <SelectTrigger id="term-ay" className="border-blue-100">
-                  <SelectValue placeholder="Select Academic Year" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  {AY_OPTIONS.map((option) => (
-                    <SelectItem key={option} value={option}>
-                      {option}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* ── Semester ──────────────────────────────────────────────── */}
-            <div className="grid gap-2">
-              <Label
-                htmlFor="term-semester"
-                className="text-xs font-semibold text-slate-600 uppercase"
-              >
-                Semester
-              </Label>
-              <Select value={semester} onValueChange={setSemester}>
-                <SelectTrigger id="term-semester" className="border-blue-100">
-                  <SelectValue placeholder="Select Semester" />
-                </SelectTrigger>
-                <SelectContent className="bg-white border-slate-200">
-                  {SEMESTER_OPTIONS.map(({ value, label }) => (
-                    <SelectItem key={value} value={value}>
-                      {label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
-            {/* ── Duplicate warning ─────────────────────────────────────── */}
-            {isDuplicate && (
-              <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
-                <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
-                <span>
-                  A term for <strong>{ay}</strong> —{" "}
-                  <strong>{semester} Semester</strong> already exists. Please
-                  choose a different combination.
-                </span>
-              </div>
+    <BaseModal
+      open={open}
+      onOpenChange={handleOpenChange}
+      asForm={true}
+      onSubmit={handleSubmit}
+      title="Create New Term"
+      description="Add a new academic term to the VERIS platform. You may optionally set it as the current active term right away."
+      className="sm:max-w-[440px] bg-white border border-blue-100 rounded-lg"
+      footer={
+        <div className="flex justify-end gap-2 sm:gap-0 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => handleOpenChange(false)}
+            className="border-slate-200 text-slate-600 h-9 mr-2"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="h-9"
+            disabled={isSubmitting || isDuplicate}
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Creating...
+              </>
+            ) : (
+              "Create Term"
             )}
+          </Button>
+        </div>
+      }
+    >
+      <div className="grid gap-4 py-4 text-xs">
+        {/* ── Academic Year ─────────────────────────────────────────── */}
+        <div className="grid gap-2">
+          <Label
+            htmlFor="term-ay"
+            className="text-xs font-semibold text-slate-600 uppercase"
+          >
+            Academic Year
+          </Label>
+          <Select value={ay} onValueChange={setAy}>
+            <SelectTrigger id="term-ay" className="border-blue-100">
+              <SelectValue placeholder="Select Academic Year" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-200">
+              {AY_OPTIONS.map((option) => (
+                <SelectItem key={option} value={option}>
+                  {option}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-            {/* ── Divider ───────────────────────────────────────────────── */}
-            <div className="border-t border-slate-100" />
+        {/* ── Semester ──────────────────────────────────────────────── */}
+        <div className="grid gap-2">
+          <Label
+            htmlFor="term-semester"
+            className="text-xs font-semibold text-slate-600 uppercase"
+          >
+            Semester
+          </Label>
+          <Select value={semester} onValueChange={setSemester}>
+            <SelectTrigger id="term-semester" className="border-blue-100 w-full">
+              <SelectValue placeholder="Select Semester" />
+            </SelectTrigger>
+            <SelectContent className="bg-white border-slate-200">
+              {SEMESTER_OPTIONS.map(({ value, label }) => (
+                <SelectItem key={value} value={value}>
+                  {label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
 
-            {/* ── Set Active checkbox ───────────────────────────────────── */}
-            <div className="flex items-start gap-3 rounded-md border border-blue-100 bg-blue-50/60 px-3 py-3">
-              <Checkbox
-                id="term-set-active"
-                checked={setActive}
-                onCheckedChange={(checked) => setSetActive(Boolean(checked))}
-                className="mt-0.5 border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
-              />
-              <div className="grid gap-0.5">
-                <Label
-                  htmlFor="term-set-active"
-                  className="cursor-pointer text-xs font-semibold text-slate-700"
-                >
-                  Set as Active Term
-                </Label>
-                <p className="text-[11px] leading-relaxed text-slate-500">
-                  {hasActiveTerm
-                    ? "Checking this will deactivate the current active term and set this new term as active immediately."
-                    : "Checking this will mark this term as the currently active term upon creation."}
-                </p>
-              </div>
-            </div>
-
-            {/* ── Preview card ──────────────────────────────────────────── */}
-            <div className="rounded-md border border-slate-100 bg-slate-50 px-3 py-2.5">
-              <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
-                Term Preview
-              </p>
-              <div className="flex items-center justify-between">
-                <span className="font-semibold text-slate-700">
-                  {ay} &mdash;{" "}
-                  {SEMESTER_OPTIONS.find((s) => s.value === semester)?.label ??
-                    semester}
-                </span>
-                <span
-                  className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${
-                    setActive
-                      ? "bg-green-100 text-green-700"
-                      : "bg-slate-100 text-slate-500"
-                  }`}
-                >
-                  {setActive ? "Active" : "Inactive"}
-                </span>
-              </div>
-            </div>
+        {/* ── Duplicate warning ─────────────────────────────────────── */}
+        {isDuplicate && (
+          <div className="flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-700">
+            <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+            <span>
+              A term for <strong>{ay}</strong> —{" "}
+              <strong>{semester} Semester</strong> already exists. Please
+              choose a different combination.
+            </span>
           </div>
+        )}
 
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              className="border-slate-200 text-slate-600 h-9"
-              disabled={isSubmitting}
+        {/* ── Divider ───────────────────────────────────────────────── */}
+        <div className="border-t border-slate-100" />
+
+        {/* ── Set Active checkbox ───────────────────────────────────── */}
+        <div className="flex items-start gap-3 rounded-md border border-blue-100 bg-blue-50/60 px-3 py-3">
+          <Checkbox
+            id="term-set-active"
+            checked={setActive}
+            onCheckedChange={(checked) => setSetActive(Boolean(checked))}
+            className="mt-0.5 border-blue-300 data-[state=checked]:bg-blue-600 data-[state=checked]:border-blue-600"
+          />
+          <div className="grid gap-0.5">
+            <Label
+              htmlFor="term-set-active"
+              className="cursor-pointer text-xs font-semibold text-slate-700"
             >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-              disabled={isSubmitting || isDuplicate}
+              Set as Active Term
+            </Label>
+            <p className="text-[11px] leading-relaxed text-slate-500">
+              {hasActiveTerm
+                ? "Checking this will deactivate the current active term and set this new term as active immediately."
+                : "Checking this will mark this term as the currently active term upon creation."}
+            </p>
+          </div>
+        </div>
+
+        {/* ── Preview card ──────────────────────────────────────────── */}
+        <div className="rounded-md border border-slate-100 bg-slate-50 px-3 py-2.5">
+          <p className="mb-1 text-[10px] font-semibold uppercase tracking-wide text-slate-400">
+            Term Preview
+          </p>
+          <div className="flex items-center justify-between">
+            <span className="font-semibold text-slate-700">
+              {ay} &mdash;{" "}
+              {SEMESTER_OPTIONS.find((s) => s.value === semester)?.label ??
+                semester}
+            </span>
+            <span
+              className={`rounded-full px-2 py-0.5 text-[10px] font-semibold ${setActive
+                ? "bg-green-100 text-green-700"
+                : "bg-slate-100 text-slate-500"
+                }`}
             >
-              {isSubmitting ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Creating...
-                </>
-              ) : (
-                "Create Term"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              {setActive ? "Active" : "Inactive"}
+            </span>
+          </div>
+        </div>
+      </div>
+    </BaseModal>
   );
 }
-

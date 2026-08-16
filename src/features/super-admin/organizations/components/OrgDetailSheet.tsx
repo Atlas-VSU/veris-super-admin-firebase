@@ -270,7 +270,7 @@ export function OrgDetailSheet({
 
               <Button
                 onClick={handleManageSubscription}
-                className="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs h-8 flex items-center justify-center gap-1.5 shadow-sm"
+                className="w-full font-medium text-xs h-8 flex items-center justify-center gap-1.5 shadow-sm"
               >
                 Manage Subscription <ArrowRight className="h-3 w-3" />
               </Button>
