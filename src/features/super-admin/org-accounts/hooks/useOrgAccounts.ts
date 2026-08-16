@@ -5,7 +5,7 @@ import { toast } from "sonner";
 import type { SuperAdminOrg, SuperAdminOrgAccount } from "@/features/super-admin/types";
 import { createOrgAccount } from "@/firebase/accounts";
 import { fetchOrganizationsPaginated } from "@/firebase/organizations";
-import type { CreateOrgAccountFormData } from "../components/CreateOrgAccountDialog";
+import type { CreateOrgAccountFormData } from "../types/dialogs.types";
 
 export function useOrgAccounts() {
   const [addOrgAccountOpen, setAddOrgAccountOpen] = useState(false);

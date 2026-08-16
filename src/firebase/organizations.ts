@@ -2,7 +2,7 @@ import type { OrgLevel, SuperAdminOrgAccount } from "@/features/super-admin/type
 import { addDoc, collection, doc, getCountFromServer, getDocs, limit, orderBy, query, startAfter, updateDoc, where } from "firebase/firestore";
 import { db } from "./firebase.config";
 import { getOrgAccounts } from "./accounts";
-import { CreateOrgFormData } from "@/features/super-admin/organizations/components/CreateOrgDialog";
+import type { CreateOrgFormData } from "@/features/super-admin/organizations/types/dialogs.types";
 
 
 
@@ -75,10 +75,11 @@ export const fetchOrganizationsPaginated = async (
       constraints.push(where("isArchived", "==", true));
     }
     if (statFilter === "active") {
-      constraints.push(where("isArchived", "==", false), where("subscribed", "==", true));
+      // Use != true so docs where isArchived is missing/undefined are included
+      constraints.push(where("isArchived", "!=", true), where("subscribed", "==", true));
     }
     if (statFilter === "inactive") {
-      constraints.push(where("isArchived", "==", false), where("subscribed", "==", false));
+      constraints.push(where("isArchived", "!=", true), where("subscribed", "==", false));
     }
   }
   
@@ -118,10 +119,14 @@ export const fetchOrganizationsPaginated = async (
     }
    }
 
-  
-  constraints.push(limit(pageSize));
+
+  // Build the count query WITHOUT limit/startAfter so it reflects the full result set
+  const countQuery = query(orgCollection, ...constraints);
+
+  // Now add paging constraints for the data fetch
+  const pageConstraints = [...constraints, limit(pageSize)];
   if (lastVisibleDoc) {
-    constraints.push(startAfter(lastVisibleDoc));
+    pageConstraints.push(startAfter(lastVisibleDoc));
   }
 
   let results: any[] = [];
@@ -129,12 +134,12 @@ export const fetchOrganizationsPaginated = async (
   const rawSearch = searchTerm.trim();
   if (searchTerm && rawSearch !== "") {
 
-    const qName = query(orgCollection, ...constraints,
+    const qName = query(orgCollection, ...pageConstraints,
       where("name", ">=", rawSearch),
       where("name", "<=", rawSearch + "\uf8ff")
     );
 
-    const qShortName = query(orgCollection, ...constraints,
+    const qShortName = query(orgCollection, ...pageConstraints,
       where("shortName", ">=", rawSearch),
       where("shortName", "<=", rawSearch + "\uf8ff")
     );
@@ -146,23 +151,27 @@ export const fetchOrganizationsPaginated = async (
       nameSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
       shortNameSnap.forEach(doc => resultsMap.set(doc.id, { id: doc.id, ...doc.data() }));
       results = Array.from(resultsMap.values());
+      totalCount = results.length;
     } catch (error) {
       console.error("Error fetching organizations with search:", error);
       results = [];
-     }
+    }
 
   }
   else {
     try {
-      const q = query(orgCollection, ...constraints);
-      const snap = await getDocs(q);
+      const q = query(orgCollection, ...pageConstraints);
+      const [snap, countSnap] = await Promise.all([
+        getDocs(q),
+        getCountFromServer(countQuery),
+      ]);
       results = snap.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-      totalCount = (await getCountFromServer(q)).data().count;
-    }catch (error) {
+      totalCount = countSnap.data().count;
+    } catch (error) {
       console.error("Error fetching organizations:", error);
       results = [];
     }
-    
+
   }
   let accounts : SuperAdminOrgAccount[] = [];
   try {

@@ -1,14 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { BaseModal } from "@/components/features/shared/BaseModal";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -21,23 +14,8 @@ import {
 } from "@/components/ui/select";
 import { Edit2, RefreshCw } from "lucide-react";
 import { format, addMonths } from "date-fns";
-import type { SuperAdminOrg, SubscriptionTier, OrgSubscription } from "../../types";
-
-interface ChangeTierDialogProps {
-  open: boolean;
-  onOpenChange: (open: boolean) => void;
-  org: SuperAdminOrg | null;
-  currentSub: OrgSubscription | null;
-  onChangeTier: (
-    orgId: string,
-    newTier: SubscriptionTier | "none",
-    expiresAt: string,
-    amountPaid: number,
-    referenceId: string,
-    paymentMethod: string
-  ) => Promise<void> | void;
-  isNew: boolean
-}
+import type { SubscriptionTier } from "../../types";
+import type { ChangeTierDialogProps } from "../types/dialogs.types";
 
 export function ChangeTierDialog({
   open,
@@ -100,19 +78,42 @@ export function ChangeTierDialog({
   };
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[450px] bg-white border border-blue-100 rounded-lg">
-        <form onSubmit={handleSubmit}>
-          <DialogHeader>
-            <DialogTitle className="text-base font-bold text-slate-800 flex items-center gap-2">
-              <Edit2 className="h-5 w-5 text-blue-600" /> {isNew ? "Activate" : "Change"} Subscription Tier
-            </DialogTitle>
-            <DialogDescription className="text-xs text-slate-500">
-              {isNew ? "Activate a new subscription" : "Update the subscription"} pricing category and record the associated payment details.
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="grid gap-4 py-4">
+    <BaseModal
+      open={open}
+      onOpenChange={onOpenChange}
+      asForm={true}
+      onSubmit={handleSubmit}
+      title={isNew ? "Activate Subscription Tier" : "Change Subscription Tier"}
+      description={`${isNew ? "Activate a new subscription" : "Update the subscription"} pricing category and record the associated payment details.`}
+      className="sm:max-w-[450px] bg-white border border-blue-100 rounded-lg"
+      footer={
+        <div className="flex justify-end gap-2 sm:gap-0 w-full">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onOpenChange(false)}
+            className="border-slate-200 text-slate-600 h-9 mr-2"
+            disabled={isSubmitting}
+          >
+            Cancel
+          </Button>
+          <Button
+            type="submit"
+            className="h-9"
+            disabled={isSubmitting}
+          >
+            {isSubmitting ? (
+              <>
+                <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Updating...
+              </>
+            ) : (
+              isNew ? "Activate Subscription" : "Update Tier"
+            )}
+          </Button>
+        </div>
+      }
+    >
+      <div className="grid gap-4 py-4">
             {/* Org card */}
             <div className="bg-slate-50 border border-slate-100 rounded-lg p-3 space-y-0.5">
               <p className="text-[10px] font-semibold text-slate-400 uppercase tracking-wider">
@@ -224,34 +225,7 @@ export function ChangeTierDialog({
                 Selecting <strong>Unsubscribed</strong> will remove the active subscription record for this organization.
               </div>
             )}
-          </div>
-
-          <DialogFooter className="gap-2 sm:gap-0">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => onOpenChange(false)}
-              className="border-slate-200 text-slate-600 h-9"
-              disabled={isSubmitting}
-            >
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              className="bg-blue-600 hover:bg-blue-700 text-white h-9"
-              disabled={isSubmitting}
-            >
-              {isSubmitting ? (
-                <>
-                  <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> Updating...
-                </>
-              ) : (
-                isNew ? "Activate Subscription" : "Update Tier"
-              )}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+      </div>
+    </BaseModal>
   );
 }

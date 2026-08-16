@@ -1,6 +1,6 @@
 import { useState, useMemo, useEffect } from "react";
 import type { SuperAdminOrgAccount, SuperAdminOrg } from "@/features/super-admin/types";
-import { EditAccountFormData } from "../components/EditAccountDialog";
+import type { EditAccountFormData } from "../types/dialogs.types";
 import { updateAccount } from "@/firebase/accounts";
 import { toast } from "sonner";
 
