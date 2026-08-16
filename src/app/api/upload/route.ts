@@ -42,7 +42,8 @@ export async function POST(req: NextRequest) {
     const buffer = Buffer.from(arrayBuffer);
 
     const adminApp = getAdminApp();
-    const bucket = getStorage(adminApp).bucket();
+    const bucketName = process.env.NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET;
+    const bucket = getStorage(adminApp).bucket(bucketName);
 
     const fileRef = bucket.file(storagePath);
     await fileRef.save(buffer, {
@@ -52,7 +53,6 @@ export async function POST(req: NextRequest) {
 
     // Build the public download URL
     const encodedPath = encodeURIComponent(storagePath);
-    const bucketName = "atlas-dev-two.firebasestorage.app"
     const downloadUrl = `https://firebasestorage.googleapis.com/v0/b/${bucketName}/o/${encodedPath}?alt=media`;
 
     return NextResponse.json({ url: downloadUrl });
