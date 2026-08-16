@@ -8,14 +8,13 @@ import { Organization } from "@/constants/types";
 import { getStorage, ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import type { CreateOrgFormData, EditOrgFormData } from "../types/dialogs.types";
 import { batchUpdateAccounts, getAccountsByOrgId } from "@/firebase/accounts";
-import { BatteryCharging } from "lucide-react";
-import { is } from "date-fns/locale";
+
 
 interface useOrgsTableProps {
   itemsPerPage: number;
- }
+}
 
-export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
+export function useOrgsTable({ itemsPerPage }: useOrgsTableProps) {
   const [accounts, setAccounts] = useState<SuperAdminOrgAccount[]>([]);
   const [localOrgs, setLocalOrgs] = useState<SuperAdminOrg[]>([]);
   const [faculties, setFaculties] = useState<SuperAdminFaculty[]>([]);
@@ -37,15 +36,24 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
   const [archiveTargetOrg, setArchiveTargetOrg] = useState<SuperAdminOrg | null>(null);
   const [totalOrgsCount, setTotalOrgsCount] = useState(0);
 
-  async function uploadFile(file: File, path: string): Promise<string>{
-    const storage = getStorage();
-    const storageRef = ref(storage, path);
+  /**
+   * Uploads a file via the server-side /api/upload route (Admin SDK).
+   * This bypasses Firebase App Check and client Storage rules entirely.
+   */
+  async function uploadFile(file: File, path: string): Promise<string> {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("path", path);
 
-    await uploadBytes(storageRef, file);
-    const downloadUrl = await getDownloadURL(storageRef);
-
-    return downloadUrl;
+    const res = await fetch("/api/upload", { method: "POST", body: formData });
+    if (!res.ok) {
+      const { error } = await res.json().catch(() => ({ error: "Unknown error" }));
+      throw new Error(error ?? "Upload failed");
+    }
+    const { url } = await res.json();
+    return url;
   }
+
 
   useEffect(() => {
     async function loadData() {
@@ -70,7 +78,7 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
         setIsLoading(true);
         const cursor = currentPage > 1 ? (cursorRef.current[currentPage - 2] ?? null) : null;
 
-        const { results: fetchedDocs,totalCount, lastVisible, accounts } = await fetchOrganizationsPaginated(
+        const { results: fetchedDocs, totalCount, lastVisible, accounts } = await fetchOrganizationsPaginated(
           itemsPerPage,
           cursor,
           search,
@@ -89,13 +97,13 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
           programName: programs.find((p) => p.id === org.programId)?.name || null,
           programAcronym: programs.find((p) => p.id === org.programId)?.acronym || null,
           level: org.accessLevel === 1 ? "department" : org.accessLevel === 2 ? "faculty" : "council",
-          createdAt: org.metadata?.createdAt?.toDate 
-          ? org.metadata.createdAt.toDate().toLocaleDateString("en-US", {
-            year: "numeric",
-            month: "long",
-            day: "numeric",
-          })
-          : null,
+          createdAt: org.metadata?.createdAt?.toDate
+            ? org.metadata.createdAt.toDate().toLocaleDateString("en-US", {
+              year: "numeric",
+              month: "long",
+              day: "numeric",
+            })
+            : null,
         } as unknown as SuperAdminOrg));
 
         setLocalOrgs(restructuredOrgs);
@@ -153,7 +161,7 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
       setLocalOrgs((prev) => [newOrg, ...prev]);
       toast.success(`Organization "${newOrg.name}" has been created!`);
     } catch (err) {
-      toast.error("Failed to create organization.");
+      toast.error(`Failed to create organization.${err}`);
     }
   };
 
@@ -162,18 +170,18 @@ export function useOrgsTable({itemsPerPage}: useOrgsTableProps) {
     orgData: EditOrgFormData
   ) => {
     try {
-      const logoUrl = orgData.logoFile && orgData.changedLogo?
+      const logoUrl = orgData.logoFile && orgData.changedLogo ?
         await uploadFile(orgData.logoFile, `org-logos/${orgData.shortName} LOGO-${Date.now()}`)
         : orgData.removeLogo ? null : orgData.existingLogoUrl || null;
-      
-      const treasurerQrUrl = orgData.treasurerQrFile && orgData.changedTreasurerQr?
+
+      const treasurerQrUrl = orgData.treasurerQrFile && orgData.changedTreasurerQr ?
         await uploadFile(orgData.treasurerQrFile, `org-qrs/${orgData.shortName} TREASURER-${Date.now()}`)
         : orgData.removeTreasurerQr ? null : orgData.existingTreasurerQrUrl || null;
-      
-      const auditorQrUrl = orgData.auditorQrFile && orgData.changedAuditorQr?
+
+      const auditorQrUrl = orgData.auditorQrFile && orgData.changedAuditorQr ?
         await uploadFile(orgData.auditorQrFile, `org-qrs/${orgData.shortName} AUDITOR-${Date.now()}`)
-        : orgData.removeAuditorQr? null: orgData.existingAuditorQrUrl || null;
-      
+        : orgData.removeAuditorQr ? null : orgData.existingAuditorQrUrl || null;
+
       await updateOrganization(orgId, {
         name: orgData.name,
         shortName: orgData.shortName,

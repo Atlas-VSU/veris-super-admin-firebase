@@ -55,7 +55,7 @@ export async function fetchOrganizations(
   facultyMap: Map<string, SuperAdminFaculty>,
   programMap: Map<string, SuperAdminProgram>
 ): Promise<SuperAdminOrg[]> {
-  const snap = await adminDb.collection("organizations").where("isArchived", "==", false).get();
+  const snap = await adminDb.collection("organizations").where("isArchived", "!=", true).get();
   return snap.docs.map((doc) => {
     const d = doc.data();
 
